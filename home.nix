@@ -34,7 +34,7 @@
 	 "Mod4+Shift+e" = "exec swaymsg exit";
 	 };
 
-         bars = [ { command = "${pkgs.sway}/bin/swaybar"; } ];
+         bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
 	 startup = [
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
 	   #{ command = "${pkgs.waybar}/bin/waybar"; always = true; }
