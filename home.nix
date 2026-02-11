@@ -15,11 +15,15 @@
       pkgs.nerd-fonts."jetbrains-mono"
       font-awesome
       material-design-icons
+      playerctl
+      brightnessctl
+      pulseaudio
    ];
 
    #Sway
    wayland.windowManager.sway = {
       enable = true;
+      
 
       config = rec {
          modifier = "Mod4"; #modifier
@@ -28,10 +32,11 @@
 
 	 #keybinds
 	 keybindings = {
-	 "Mod4+return" = "exec ${terminal}";
-	 "Mod4+d" = "exec ${menu}";
-	 "Mod4+q" = "kill";
-	 "Mod4+Shift+e" = "exec swaymsg exit";
+	 "${modifier}+return" = "exec ${terminal}";
+	 "${modifier}+d" = "exec ${menu}";
+	 "${modifier}+q" = "kill";
+	 "${modifier}+Shift+e" = "exec swaymsg exit";
+	 "${modifier}+Shift+c" = "reload";
 	 };
 
          bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
@@ -39,8 +44,14 @@
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
 	   #{ command = "${pkgs.waybar}/bin/waybar"; always = true; }
 	];
-
       };
+
+      extraConfig = ''
+	 default_border pixel 2
+	 default_floating_border pixel 2
+	 for_window [all] border pixel 2
+      '';
+
    };
 
    #Kitty Config
