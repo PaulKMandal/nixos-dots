@@ -31,12 +31,13 @@
 	 "Mod4+return" = "exec ${terminal}";
 	 "Mod4+d" = "exec ${menu}";
 	 "Mod4+q" = "kill";
+	 "Mod4+Shift+e" = "exec swaymsg exit";
 	 };
 
-         #bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
+         bars = [ { command = "${pkgs.sway}/bin/swaybar"; } ];
 	 startup = [
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
-	   { command = "${pkgs.waybar}/bin/waybar"; always = true; }
+	   #{ command = "${pkgs.waybar}/bin/waybar"; always = true; }
 	];
 
       };
