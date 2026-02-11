@@ -13,7 +13,6 @@
       slurp
       wl-clipboard
       pkgs.nerd-fonts."jetbrains-mono"
-      bibata-cursors
       font-awesome
       material-design-icons
    ];
@@ -50,13 +49,5 @@
       adjust_column_width 0
       '';
 
-   #Cursor
-   home.pointerCursor = {
-      gtk.enable = true;
-      x11.enable = true;      # harmless even on Wayland
-      name = "Bibata-Modern-Ice";
-      package = pkgs.bibata-cursors;
-      size = 24;
-   };
 }
 
