@@ -12,6 +12,7 @@
       grim
       slurp
       wl-clipboard
+      pkgs.nerd-fonts."jetbrains-mono"
    ];
 
    wayland.windowManager.sway = {
@@ -36,5 +37,14 @@
 
       };
    };
+
+   home.file.".config/kitty/kitty.conf".text = ''
+      font_family      JetBrainsMono Nerd Font
+      font_size        12.0
+      adjust_line_height 0
+      adjust_column_width 0
+      '';
+
+
 }
 
