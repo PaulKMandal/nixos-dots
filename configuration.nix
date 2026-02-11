@@ -102,6 +102,22 @@
     enable32Bit=true;
   };
 
+  fonts = {
+     enableDefaultPackages = true;
+     fontconfig.defaultFonts = {
+       sansSerif = [ "Noto Sans" ];
+       serif     = [ "Noto Serif" ];
+       monospace = [ "JetBrainsMono Nerd Font" ];
+     };
+   };
+
+fonts.packages = with pkgs; [
+  noto-fonts
+  noto-fonts-color-emoji
+  nerd-fonts."jetbrains-mono"
+];
+
+
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;

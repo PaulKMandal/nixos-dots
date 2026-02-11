@@ -33,9 +33,10 @@
 	 "Mod4+q" = "kill";
 	 };
 
-         bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
+         #bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
 	 startup = [
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
+	   { command = "${pkgs.waybar}/bin/waybar"; always = true; }
 	];
 
       };
