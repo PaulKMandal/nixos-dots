@@ -13,11 +13,12 @@
       slurp
       wl-clipboard
       pkgs.nerd-fonts."jetbrains-mono"
-
+      bibata-cursors
       font-awesome
       material-design-icons
    ];
 
+   #Sway
    wayland.windowManager.sway = {
       enable = true;
 
@@ -41,12 +42,23 @@
       };
    };
 
+   #Kitty Config
    home.file.".config/kitty/kitty.conf".text = ''
       font_family      JetBrainsMono Nerd Font
       font_size        12.0
       adjust_line_height 0
       adjust_column_width 0
       '';
+
+   #Cursor
+   home.pointerCursor = {
+      gtk.enable = true;
+      x11.enable = true;      # harmless even on Wayland
+      name = "Bibata-Modern-Ice";
+      package = pkgs.bibata-cursors;
+      size = 24;
+   };
+}
 
 
 }
