@@ -13,6 +13,9 @@
       slurp
       wl-clipboard
       pkgs.nerd-fonts."jetbrains-mono"
+
+      font-awesome
+      material-design-icons
    ];
 
    wayland.windowManager.sway = {
