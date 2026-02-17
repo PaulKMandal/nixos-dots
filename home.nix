@@ -101,6 +101,7 @@
 
          bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
 	 startup = [
+	   { command = "${pkgs.swaybg}/bin/swaybg -i ${config.home.homeDirectory}/Pictures/Wallpapers/xPiPUEr.jpg -m fill"; always = true; }
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
 	   #{ command = "${pkgs.waybar}/bin/waybar"; always = true; }
 	];
