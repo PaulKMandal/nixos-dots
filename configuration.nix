@@ -93,6 +93,7 @@
      polkit_gnome
      pavucontrol
      networkmanagerapplet
+     python3
   ];
 
   environment.variables.EDITOR = "neovim";
