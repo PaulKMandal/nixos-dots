@@ -5,10 +5,6 @@
       nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
       home-manager.url = "github:nix-community/home-manager/release-25.11";
       home-manager.inputs.nixpkgs.follows = "nixpkgs";
-
-      waterfox = {
-        url = "github:sammypanda/nixos-waterfox";
-        inputs.nixpkgs.follows = "nixpkgs";
       };
    };
 
@@ -24,7 +20,7 @@
                ({ ... }: {
                  nixpkgs.overlays = [
                    (final: prev: {
-                     waterfox = waterfox.packages.${system}.default;
+                     waterfox = final.callPackage ./pkgs/waterfox-bin { };
                    })
                  ];
                })
