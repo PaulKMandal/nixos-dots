@@ -115,6 +115,45 @@
 
    };
 
+   #Shell (fish)
+   /*
+   programs.fish = {
+     enable = true;
+   };
+   */
+
+   #Shell (zsh)
+   programs.zsh = {
+     enable = true;
+     enableCompletion = true;
+     autosuggestion.enable = true;
+     syntaxHighlighting.enable = true;
+     historySubstringSearch.enable = true;
+
+   # optional but nice:
+   history = {
+     size = 10000;
+     save = 10000;
+     share = true;
+   };
+
+   initExtra = ''
+      # Better completion menu
+      zstyle ':completion:*' menu select
+
+      # Accept autosuggestion with Right Arrow (keep this if you like)
+      bindkey '^[[C' autosuggest-accept
+
+      # Fish-like: type prefix, then Up/Down cycles matching history
+      autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+      zle -N up-line-or-beginning-search
+      zle -N down-line-or-beginning-search
+      bindkey '^[[A' history-search-backward
+      bindkey '^[[B' history-search-forward
+    '';
+   };
+
+
    #Kitty Config
    home.file.".config/kitty/kitty.conf".text = ''
       font_family      JetBrainsMono Nerd Font
