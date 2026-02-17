@@ -206,6 +206,38 @@
      };
    };
 
+    gtk = {
+    enable = true;
+
+    theme = {
+      name = "adw-gtk3-dark";
+      package = pkgs.adw-gtk3;
+    };
+
+    iconTheme = {
+      name = "Papirus-Dark";
+      package = pkgs.papirus-icon-theme;
+    };
+
+    # optional cursor theme
+    # cursorTheme = { name = "Adwaita"; package = pkgs.gnome-themes-extra; };
+
+    gtk3.extraConfig = {
+      "gtk-application-prefer-dark-theme" = 1;
+    };
+
+    gtk4.extraConfig = {
+      "gtk-application-prefer-dark-theme" = 1;
+    };
+  };
+
+  # This makes many GTK4/libadwaita apps prefer dark
+  dconf.settings."org/gnome/desktop/interface" = {
+    color-scheme = "prefer-dark";
+    gtk-theme = "adw-gtk3-dark";
+    icon-theme = "Papirus-Dark";
+  };
+
    xdg.configFile."waybar/power_menu.xml".text = ''
       <?xml version="1.0" encoding="UTF-8"?>
       <interface>
