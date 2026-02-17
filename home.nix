@@ -97,6 +97,15 @@
 	  "${modifier}+f" = "fullscreen toggle";
 	  "${modifier}+Shift+space" = "floating toggle";
 
+          # LARBS-ish gaps controls
+         "${modifier}+a" = "gaps inner all toggle 10; gaps outer all toggle 5";
+         "${modifier}+z" = "gaps inner all plus 2";
+         "${modifier}+x" = "gaps inner all minus 2";
+
+         # Optional: control *outer* gaps separately (nice to have)
+         "${modifier}+Shift+z" = "gaps outer all plus 2";
+         "${modifier}+Shift+x" = "gaps outer all minus 2";
+
 	 };
 
          bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
@@ -111,6 +120,13 @@
 	 default_border pixel 2
 	 default_floating_border pixel 2
 	 for_window [all] border pixel 2
+
+         # default gaps
+         gaps inner 10
+         gaps outer 5
+
+        # only show gaps when >1 window in workspace
+        #smart_gaps on
       '';
 
    };
