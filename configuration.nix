@@ -98,6 +98,18 @@
 
   environment.variables.EDITOR = "neovim";
 
+  #Enable fish
+  programs.fish.enable = false;
+  
+  #Enable zsh
+  programs.zsh.enable = true;
+
+  # ensures /etc/shells contains fish
+  environment.shells = with pkgs; [ zsh ];
+
+  # set for your user (replace nix with your username if different)
+  users.users.nix.shell = pkgs.zsh;
+
   hardware.graphics = {
     enable = true;
     enable32Bit=true;

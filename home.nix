@@ -115,6 +115,34 @@
 
    };
 
+   #Shell (fish)
+   /*
+   programs.fish = {
+     enable = true;
+   };
+   */
+
+   #Shell (zsh)
+   programs.zsh = {
+     enable = true;
+     enableCompletion = true;
+     autosuggestion.enable = true;
+     syntaxHighlighting.enable = true;
+
+   # optional but nice:
+   history = {
+     size = 10000;
+     save = 10000;
+     share = true;
+   };
+
+   initExtra = ''
+      # Better completion menu
+      zstyle ':completion:*' menu select
+    '';
+   };
+
+
    #Kitty Config
    home.file.".config/kitty/kitty.conf".text = ''
       font_family      JetBrainsMono Nerd Font
