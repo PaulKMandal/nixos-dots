@@ -247,6 +247,31 @@
     icon-theme = "Papirus-Dark";
   };
 
+  #Services
+  systemd.user.services.protonmail-bridge = {
+    Unit = {
+      Description = "Proton Mail Bridge";
+      Wants = [ "network-online.target" ];
+      After  = [ "network-online.target" ];
+    };
+  
+    Service = {
+      ExecStart = "${pkgs.protonmail-bridge}/bin/protonmail-bridge --noninteractive";
+      Restart = "on-failure";
+      RestartSec = 3;
+  
+      # Good hygiene
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
+    };
+  
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+  
    xdg.configFile."waybar/power_menu.xml".text = ''
       <?xml version="1.0" encoding="UTF-8"?>
       <interface>
