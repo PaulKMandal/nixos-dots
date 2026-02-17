@@ -94,6 +94,12 @@
      pavucontrol
      networkmanagerapplet
      python3
+     protonmail-bridge
+     protonmail-bridge-gui
+     thunderbird
+     keepassxc
+     xfce.thunar
+     veracrypt
   ];
 
   environment.variables.EDITOR = "neovim";
@@ -109,6 +115,23 @@
 
   # set for your user (replace nix with your username if different)
   users.users.nix.shell = pkgs.zsh;
+
+  #-----Thunar stuff-----
+  programs.thunar.enable = true;
+
+  # If you're not running full XFCE, you usually want this so settings persist:
+  programs.xfconf.enable = true;
+
+  # Mount/trash/network integration + thumbnails:
+  services.gvfs.enable = true;
+  services.tumbler.enable = true;
+
+  # For mounting removable media (often needed with Thunar + gvfs):
+  services.udisks2.enable = true;
+
+  # Authorization prompts (mounting, etc.):
+  security.polkit.enable = true;
+  #----------------------
 
   hardware.graphics = {
     enable = true;
@@ -130,6 +153,16 @@ fonts.packages = with pkgs; [
   nerd-fonts."jetbrains-mono"
 ];
 
+  #Enable keyring
+  services.gnome.gnome-keyring.enable = true;
+
+  security.pam.services.login.enableGnomeKeyring = true;
+
+  #Config for logs
+  services.journald.extraConfig = ''
+  Storage=persistent
+  SystemMaxUse=1G
+  '';
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
