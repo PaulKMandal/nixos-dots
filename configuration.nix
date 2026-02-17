@@ -111,6 +111,7 @@
      pciutils
      ripgrep
      waterfox
+     xdg-utils
   ];
 
   environment.variables.EDITOR = "neovim";
