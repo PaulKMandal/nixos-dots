@@ -128,6 +128,7 @@
      enableCompletion = true;
      autosuggestion.enable = true;
      syntaxHighlighting.enable = true;
+     historySubstringSearch.enable = true;
 
    # optional but nice:
    history = {
@@ -139,6 +140,16 @@
    initExtra = ''
       # Better completion menu
       zstyle ':completion:*' menu select
+
+      # Accept autosuggestion with Right Arrow (keep this if you like)
+      bindkey '^[[C' autosuggest-accept
+
+      # Fish-like: type prefix, then Up/Down cycles matching history
+      autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+      zle -N up-line-or-beginning-search
+      zle -N down-line-or-beginning-search
+      bindkey '^[[A' history-search-backward
+      bindkey '^[[B' history-search-forward
     '';
    };
 
