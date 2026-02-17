@@ -18,6 +18,8 @@
       playerctl
       brightnessctl
       pulseaudio
+      wlogout
+      swaylock
    ];
 
    #Sway
@@ -38,6 +40,7 @@
 	  "${modifier}+q"        = "kill";   # your preference
 	  "${modifier}+Shift+c"  = "reload";
 	  "${modifier}+Shift+e"  = "exec swaynag -t warning -m 'Exit sway?' -b 'Yes' 'swaymsg exit'";
+	  "Print"       = "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
 
 	  # --- focus movement (vim keys + arrows) ---
 	  "${modifier}+h"        = "focus left";
