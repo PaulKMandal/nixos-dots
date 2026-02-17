@@ -47,6 +47,7 @@
 	  "${modifier}+Return"   = "exec ${terminal}";
 	  "${modifier}+d"        = "exec ${menu}";
 	  "${modifier}+q"        = "kill";   # your preference
+	  "${modifier}+r" 	 = "exec ${pkgs.xfce.thunar}/bin/thunar";
 	  "${modifier}+Shift+c"  = "reload";
 	  "${modifier}+Shift+e"  = "exec swaynag -t warning -m 'Exit sway?' -b 'Yes' 'swaymsg exit'";
 	  "Print"       = "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
@@ -97,6 +98,7 @@
 	  # --- splits & layouts ---
 	  "${modifier}+b" = "splith";                  # horizontal split
 	  "${modifier}+v" = "splitv";                  # vertical split
+	  "${modifier}+Shift+b" = "split auto";
 	  "${modifier}+s" = "layout stacking";
 	  "${modifier}+w" = "layout tabbed";
 	  "${modifier}+e" = "layout toggle split";
