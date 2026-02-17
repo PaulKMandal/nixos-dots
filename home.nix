@@ -22,6 +22,8 @@
       swaylock
       swaybg
       discord
+      udiskie
+      polkit_gnome
    ];
 
    #Sway
@@ -113,6 +115,12 @@
 	   { command = "${pkgs.swaybg}/bin/swaybg -i ${config.home.homeDirectory}/Pictures/Wallpapers/xPiPUEr.jpg -m fill"; always = true; }
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
 	   #{ command = "${pkgs.waybar}/bin/waybar"; always = true; }
+
+	   # polkit agent (needed so mounting is authorized)
+           { command = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1"; always = true; }
+
+           # automounter
+           { command = "${pkgs.udiskie}/bin/udiskie --tray --appindicator"; always = true; }
 	];
       };
 
