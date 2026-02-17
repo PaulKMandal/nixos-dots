@@ -187,6 +187,14 @@
     '';
    };
 
+   #wofi config
+   programs.wofi = {
+     enable = true;
+     settings = {
+       show = "drun";
+       sort_order = "alphabetical";
+     };
+   };
 
    #Kitty Config
    programs.kitty = {
