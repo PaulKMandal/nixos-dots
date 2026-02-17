@@ -20,6 +20,8 @@
       pulseaudio
       wlogout
       swaylock
+      swaybg
+      discord
    ];
 
    #Sway
