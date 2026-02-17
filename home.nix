@@ -155,13 +155,24 @@
 
 
    #Kitty Config
-   home.file.".config/kitty/kitty.conf".text = ''
-      font_family      JetBrainsMono Nerd Font
-      font_size        12.0
-      adjust_line_height 0
-      adjust_column_width 0
-      '';
+   programs.kitty = {
+     enable = true;
    
+     font = {
+       name = "JetBrainsMono Nerd Font";
+       size = 12.0;
+     };
+   
+     settings = {
+       adjust_line_height = "0";
+       adjust_column_width = "0";
+   
+       # transparency
+       background_opacity = "0.90";          # 0.0..1.0
+       dynamic_background_opacity = "yes";
+     };
+   };
+
    xdg.configFile."waybar/power_menu.xml".text = ''
       <?xml version="1.0" encoding="UTF-8"?>
       <interface>
