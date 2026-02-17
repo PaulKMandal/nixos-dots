@@ -20,6 +20,15 @@
          nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
 	    inherit system;
 	    modules = [
+
+               ({ ... }: {
+                 nixpkgs.overlays = [
+                   (final: prev: {
+                     waterfox = waterfox.packages.${system}.default;
+                   })
+                 ];
+               })
+
 	       ./configuration.nix
 	       home-manager.nixosModules.home-manager
 	       {
