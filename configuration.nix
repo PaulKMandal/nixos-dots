@@ -157,6 +157,8 @@ fonts.packages = with pkgs; [
   services.gnome.gnome-keyring.enable = true;
 
   security.pam.services.login.enableGnomeKeyring = true;
+  #SysRq for debugging/dumping tasks
+  boot.kernel.sysctl."kernel.sysrq" = 1;
 
   #Config for logs
   services.journald.extraConfig = ''
