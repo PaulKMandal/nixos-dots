@@ -14,6 +14,13 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Make sure nouveau never binds the card
+  boot.blacklistedKernelModules = [ "nouveau" ];
+  boot.kernelParams = [
+    "modprobe.blacklist=nouveau"
+    "nouveau.modeset=0"
+  ];
+
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -100,6 +107,9 @@
      keepassxc
      xfce.thunar
      veracrypt
+     libreoffice
+     pciutils
+     ripgrep
   ];
 
   environment.variables.EDITOR = "neovim";
@@ -132,6 +142,15 @@
   # Authorization prompts (mounting, etc.):
   security.polkit.enable = true;
   #----------------------
+
+
+  # Use NVIDIA proprietary driver
+  services.xserver.videoDrivers = [ "nvidia" ];
+
+  hardware.nvidia = {
+    modesetting.enable = true;  # needed for modern Wayland/DRM path
+    open = false;               # start with proprietary kernel module
+  };
 
   hardware.graphics = {
     enable = true;
