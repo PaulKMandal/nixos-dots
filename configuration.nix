@@ -110,6 +110,7 @@
      libreoffice
      pciutils
      ripgrep
+     waterfox
   ];
 
   environment.variables.EDITOR = "neovim";
