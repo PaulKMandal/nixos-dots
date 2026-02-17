@@ -24,6 +24,10 @@
       discord
       udiskie
       polkit_gnome
+      adw-gtk3
+      papirus-icon-theme
+      gnome-themes-extra  # fallback themes
+      dconf               # for gsettings/dconf
    ];
 
    #Sway
