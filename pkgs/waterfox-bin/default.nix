@@ -22,7 +22,7 @@ stdenvNoCC.mkDerivation rec {
     url = "https://cdn1.waterfox.net/waterfox/releases/${version}/Linux_x86_64/waterfox-${version}.tar.bz2";
     # Waterfox publishes SHA512; Nix wants sha256. Get it via:
     #   nix store prefetch-file --json <url> | jq -r .hash
-    sha256 = lib.fakeSha256;
+    sha256 = "sha256-Vj94tSPxGxMyl6D2jgz9KBZHjjpmWAfIQeklIYztcYg=";
   };
 
   nativeBuildInputs = [ autoPatchelfHook makeWrapper ];
