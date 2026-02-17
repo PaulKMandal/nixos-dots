@@ -133,6 +133,7 @@
 	 default_border pixel 2
 	 default_floating_border pixel 2
 	 for_window [all] border pixel 2
+	 titlebar_border_thickness 2
 
          # default gaps
          gaps inner 10
