@@ -151,6 +151,20 @@
 
    };
 
+   xdg.mimeApps = {
+     enable = true;
+     defaultApplications = {
+       "text/html" = [ "waterfox.desktop" ];
+       "x-scheme-handler/http" = [ "waterfox.desktop" ];
+       "x-scheme-handler/https" = [ "waterfox.desktop" ];
+     };
+   };
+
+home.sessionVariables = {
+  BROWSER = "waterfox";
+};
+
+
    #Shell (fish)
    /*
    programs.fish = {
