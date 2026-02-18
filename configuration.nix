@@ -119,7 +119,6 @@
      gnome-disk-utility
      gparted
      cryptsetup
-     dmsetup
      lvm2
      
      sirikali
