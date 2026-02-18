@@ -22,6 +22,8 @@
 
   boot.initrd.luks.devices."luks-76011fbb-d048-43bf-8024-855d39165ec6".device = "/dev/disk/by-uuid/76011fbb-d048-43bf-8024-855d39165ec6";
 
+  boot.initrd.luks.devices."luks-e5423630-8055-4543-84a6-a610ef465f95".device = "/dev/disk/by-uuid/e5423630-8055-4543-84a6-a610ef465f95";
+
   fileSystems."/home" =
     { device = "/dev/mapper/luks-76011fbb-d048-43bf-8024-855d39165ec6";
       fsType = "btrfs";
@@ -34,8 +36,32 @@
       options = [ "fmask=0077" "dmask=0077" ];
     };
 
+  fileSystems."/mnt/Data" = {
+    device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
+    fsType = "btrfs";
+    options = [ "subvol=@data" "compress=zstd" "noatime" ];
+  };
+  
+  fileSystems."/mnt/Data/.snapshots" = {
+    device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
+    fsType = "btrfs";
+    options = [ "subvol=@snapshots" "compress=zstd" "noatime" ];
+  };
+  
+  fileSystems."/mnt/Data/.scratch" = {
+    device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
+    fsType = "btrfs";
+    options = [ "subvol=@scratch" "compress=zstd" "noatime" ];
+  };
+
   swapDevices = [ ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  systemd.tmpfiles.rules = [
+    "d /mnt/Data 0755 root root - -"
+    "d /mnt/Data/.snapshots 0755 root root - -"
+    "d /mnt/Data/.scratch 0755 root root - -"
+  ];
+
 }
