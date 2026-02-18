@@ -8,11 +8,20 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./modules/zed/configuration.nix
+      ./options.nix
     ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+
+  # Make sure nouveau never binds the card
+  boot.blacklistedKernelModules = [ "nouveau" ];
+  boot.kernelParams = [
+    "modprobe.blacklist=nouveau"
+    "nouveau.modeset=0"
+  ];
 
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -78,6 +87,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+     home-manager
      git
      neovim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
      wget
@@ -93,9 +103,89 @@
      polkit_gnome
      pavucontrol
      networkmanagerapplet
+     python3
+     protonmail-bridge
+     protonmail-bridge-gui
+     thunderbird
+     keepassxc
+     xfce.thunar
+     veracrypt
+     libreoffice
+     pciutils
+     ripgrep
+     waterfox
+     xdg-utils
+     zed-editor
+     signal-desktop
+     gnome-disk-utility
+     gparted
+     cryptsetup
+     lvm2
+     tree
+     
+     sirikali
+     #SiriKali filesystem backends
+     cryfs
+     securefs
+     encfs
+     sshfs
+     fscrypt-experimental
+     fscryptctl
+
+     #Needed for yubikey use (ykchalresp) with 3rd party apps.
+     yubikey-personalization
   ];
 
+  #Needed for non-root use of yubikey tools (e.g. ykchalresp)
+  services.udev.packages = with pkgs; [
+    yubikey-personalization
+  ];
+
+  #needed for PIV/GPG use with yubikey
+  services.pcscd.enable = true;
+
+  #needed for fuse mounts (SiriKali)
+  programs.fuse.userAllowOther = true;
+
   environment.variables.EDITOR = "neovim";
+
+  #Enable fish
+  programs.fish.enable = false;
+  
+  #Enable zsh
+  programs.zsh.enable = true;
+
+  # ensures /etc/shells contains fish
+  environment.shells = with pkgs; [ zsh ];
+
+  # set for your user (replace nix with your username if different)
+  users.users.nix.shell = pkgs.zsh;
+
+  #-----Thunar stuff-----
+  programs.thunar.enable = true;
+
+  # If you're not running full XFCE, you usually want this so settings persist:
+  programs.xfconf.enable = true;
+
+  # Mount/trash/network integration + thumbnails:
+  services.gvfs.enable = true;
+  services.tumbler.enable = true;
+
+  # For mounting removable media (often needed with Thunar + gvfs):
+  services.udisks2.enable = true;
+
+  # Authorization prompts (mounting, etc.):
+  security.polkit.enable = true;
+  #----------------------
+
+
+  # Use NVIDIA proprietary driver
+  services.xserver.videoDrivers = [ "nvidia" ];
+
+  hardware.nvidia = {
+    modesetting.enable = true;  # needed for modern Wayland/DRM path
+    open = false;               # start with proprietary kernel module
+  };
 
   hardware.graphics = {
     enable = true;
@@ -117,6 +207,18 @@ fonts.packages = with pkgs; [
   nerd-fonts."jetbrains-mono"
 ];
 
+  #Enable keyring
+  services.gnome.gnome-keyring.enable = true;
+
+  security.pam.services.login.enableGnomeKeyring = true;
+  #SysRq for debugging/dumping tasks
+  boot.kernel.sysctl."kernel.sysrq" = 1;
+
+  #Config for logs
+  services.journald.extraConfig = ''
+  Storage=persistent
+  SystemMaxUse=1G
+  '';
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

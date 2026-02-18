@@ -15,12 +15,21 @@
          nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
 	    inherit system;
 	    modules = [
+
+               ({ ... }: {
+                 nixpkgs.overlays = [
+                   (final: prev: {
+                     waterfox = final.callPackage ./pkgs/waterfox-bin { };
+                   })
+                 ];
+               })
+
 	       ./configuration.nix
 	       home-manager.nixosModules.home-manager
 	       {
 	          home-manager.useGlobalPkgs = true;
 		  home-manager.useUserPackages = true;
-
+		  home-manager.backupFileExtension = "bak";
 		  home-manager.users.nix = import ./home.nix;
 	       }
             ];
