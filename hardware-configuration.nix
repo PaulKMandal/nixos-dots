@@ -22,6 +22,7 @@
 
   boot.initrd.luks.devices."luks-76011fbb-d048-43bf-8024-855d39165ec6".device = "/dev/disk/by-uuid/76011fbb-d048-43bf-8024-855d39165ec6";
 
+  #decrypt second drive
   boot.initrd.luks.devices."luks-e5423630-8055-4543-84a6-a610ef465f95".device = "/dev/disk/by-uuid/e5423630-8055-4543-84a6-a610ef465f95";
 
   fileSystems."/home" =
@@ -36,18 +37,21 @@
       options = [ "fmask=0077" "dmask=0077" ];
     };
 
+  #mount btrfs main subvolume for second drive
   fileSystems."/mnt/Data" = {
     device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
     fsType = "btrfs";
     options = [ "subvol=@data" "compress=zstd" "noatime" ];
   };
   
+  #mount btrfs snapshot subvolume for second drive
   fileSystems."/mnt/Data/.snapshots" = {
     device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
     fsType = "btrfs";
     options = [ "subvol=@snapshots" "compress=zstd" "noatime" ];
   };
   
+  #Mount btrfs scratch (untracked) subvolume for second drive
   fileSystems."/mnt/Data/.scratch" = {
     device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
     fsType = "btrfs";
