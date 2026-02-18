@@ -22,7 +22,7 @@
         dark = "One Dark";
       };
 
-      format_on_save = true;
+      format_on_save = "on";
     };
 
     # optional later:
