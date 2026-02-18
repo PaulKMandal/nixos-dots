@@ -116,7 +116,18 @@
      xdg-utils
      zed-editor
      signal-desktop
+     
+     sirikali
+     #SiriKali filesystem backends
+     cryfs
+     securefs
+     encfs
+     sshfs
+     fscrypt
   ];
+
+  #needed for fuse mounts (SiriKali)
+  programs.fuse.userAllowOther = true;
 
   environment.variables.EDITOR = "neovim";
 
