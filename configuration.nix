@@ -8,7 +8,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      ./modules/zed/nixos.nix
+      ./modules/zed/configuration.nix
     ];
 
   # Bootloader.
