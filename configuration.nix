@@ -125,7 +125,18 @@
      sshfs
      fscrypt-experimental
      fscryptctl
+
+     #Needed for yubikey use (ykchalresp) with 3rd party apps.
+     yubikey-personalization
   ];
+
+  #Needed for non-root use of yubikey tools (e.g. ykchalresp)
+  services.udev.packages = with pkgs; [
+    yubikey-personalization
+  ];
+
+  #needed for PIV/GPG use with yubikey
+  services.pcscd.enable = true;
 
   #needed for fuse mounts (SiriKali)
   programs.fuse.userAllowOther = true;
