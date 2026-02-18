@@ -68,4 +68,6 @@
     "d /mnt/Data/.scratch 0755 root root - -"
   ];
 
+  #We want to bookmark /mnt/Data, so set this to true
+  disks.hasDataMount = true;
 }
