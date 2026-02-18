@@ -64,9 +64,4 @@
     "d /mnt/Data/.scratch 0755 root root - -"
   ];
 
-  #Show second drive in thunar.
-  xdg.configFile."gtk-3.0/bookmarks".text = ''
-    file:///mnt/Data Data
-  '';
-
 }
