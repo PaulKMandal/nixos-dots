@@ -120,6 +120,7 @@
      gparted
      cryptsetup
      lvm2
+     tree
      
      sirikali
      #SiriKali filesystem backends
