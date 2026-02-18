@@ -155,6 +155,7 @@
 
    };
 
+   #Default Applications
    xdg.mimeApps = {
      enable = true;
      defaultApplications = {
