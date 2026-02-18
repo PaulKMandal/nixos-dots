@@ -9,6 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./modules/zed/configuration.nix
+      ./options.nix
     ];
 
   # Bootloader.
@@ -120,6 +121,7 @@
      gparted
      cryptsetup
      lvm2
+     tree
      
      sirikali
      #SiriKali filesystem backends
