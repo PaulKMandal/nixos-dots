@@ -123,7 +123,8 @@
      securefs
      encfs
      sshfs
-     fscrypt
+     fscrypt-experimental
+     fscryptctl
   ];
 
   #needed for fuse mounts (SiriKali)
