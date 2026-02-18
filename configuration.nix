@@ -8,6 +8,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./modules/zed/nixos.nix
     ];
 
   # Bootloader.
@@ -112,6 +113,7 @@
      ripgrep
      waterfox
      xdg-utils
+     zed-editor
   ];
 
   environment.variables.EDITOR = "neovim";

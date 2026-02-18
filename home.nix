@@ -1,6 +1,10 @@
 { config, pkgs, ...}:
 
 {
+   imports = [
+     ./modules/zed/home.nix
+   ];
+
    home.stateVersion = "25.11";
 
    home.packages = with pkgs; [
