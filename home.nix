@@ -161,6 +161,10 @@
        "text/html" = [ "waterfox.desktop" ];
        "x-scheme-handler/http" = [ "waterfox.desktop" ];
        "x-scheme-handler/https" = [ "waterfox.desktop" ];
+
+       "inode/directory" = [ "thunar.desktop" ];
+       "x-scheme-handler/file" = [ "thunar.desktop" ];
+       "application/x-directory" = [ "thunar.desktop" ];
      };
    };
 
