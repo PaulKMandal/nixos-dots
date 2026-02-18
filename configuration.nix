@@ -116,6 +116,8 @@
      xdg-utils
      zed-editor
      signal-desktop
+     gnome-disk-utility
+     gparted
      
      sirikali
      #SiriKali filesystem backends
