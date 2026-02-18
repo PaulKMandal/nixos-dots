@@ -118,6 +118,9 @@
      signal-desktop
      gnome-disk-utility
      gparted
+     cryptsetup
+     dmsetup
+     lvm2
      
      sirikali
      #SiriKali filesystem backends
