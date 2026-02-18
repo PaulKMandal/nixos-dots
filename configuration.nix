@@ -115,6 +115,7 @@
      waterfox
      xdg-utils
      zed-editor
+     signal
   ];
 
   environment.variables.EDITOR = "neovim";
