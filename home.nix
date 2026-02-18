@@ -25,6 +25,7 @@
       wlogout
       swaylock
       swaybg
+      discord
       udiskie
       polkit_gnome
       adw-gtk3
