@@ -169,10 +169,32 @@
      };
    };
 
-home.sessionVariables = {
-  BROWSER = "waterfox";
-};
+   home.sessionVariables = {
+     BROWSER = "librefox";
+   };
 
+   programs.librewolf = {
+     enable = true;
+
+     # These map to about:config prefs
+     settings = {
+       # make sure password saving is enabled
+       "signon.rememberSignons" = true;
+
+       # prompt to save logins + allow autofill
+       "signon.autofillForms" = true;
+       "signon.formlessCapture.enabled" = true;
+
+       # optional: stop LibreWolf from wiping things on exit (often why it "won't save")
+       "privacy.clearOnShutdown.cookies" = false;
+       "privacy.clearOnShutdown.history" = false;
+       "privacy.clearOnShutdown.sessions" = false;
+
+       # optional: if you want it to remember site logins/sessions
+       "privacy.clearOnShutdown.offlineApps" = false;
+       "privacy.clearOnShutdown.siteSettings" = false;
+     };
+  };
 
    #Shell (fish)
    /*
