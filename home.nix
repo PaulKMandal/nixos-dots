@@ -174,75 +174,126 @@
    };
 
    #LibreWolf Config
-   let
-     addons = pkgs.nur.repos.rycee.firefox-addons;
-   in
    programs.librewolf = {
      enable = true;
 
-     # 1. These map to about:config prefs
-     settings = {
-       # make sure password saving is enabled
-       "signon.rememberSignons" = true;
-
-       # prompt to save logins + allow autofill
-       "signon.autofillForms" = true;
-       "signon.formlessCapture.enabled" = true;
-
-       # Send “dark mode preferred” to websites
-       "layout.css.prefers-color-scheme.content-override" = 0;
-
-       # optional: stop LibreWolf from wiping things on exit (often why it "won't save")
-       "privacy.clearOnShutdown.cookies" = false;
-       "privacy.clearOnShutdown.history" = false;
-       "privacy.clearOnShutdown.sessions" = false;
-
-       # optional: if you want it to remember site logins/sessions
-       "privacy.clearOnShutdown.offlineApps" = false;
-       "privacy.clearOnShutdown.siteSettings" = false;
-
-      # Secure DNS: “Let LibreWolf choose”
-      #
-      # network.trr.mode meanings (relevant ones):
-      # 0 = off by default, 1 = browser chooses/race, 2 = TRR first w/ fallback,
-      # 3 = TRR only, 5 = completely disabled by choice. :contentReference[oaicite:2]{index=2}
-      #
-      # “Let browser decide” best matches 1 (race/choose).
-      "network.trr.mode" = 0;
+     /*
+     #----Overriding the Policies doesn't really work---
+     policies = {
+       ExtensionSettings = {
+         # "*" default: allow extensions unless you explicitly block them
+         "*" = {
+           installation_mode = "allowed";
+         };
+   
+         # Force-install + enable
+         "uBlock0@raymondhill.net" = { installation_mode = "force_installed"; };
+         "leechblockng@proginosko.com" = { installation_mode = "force_installed"; };
+         "{74145f27-f039-47ce-a470-a662b129930a}" = { installation_mode = "force_installed"; }; # ClearURLs
+         "{762f9885-5a13-4abd-9c77-433dcd38b8fd}" = { installation_mode = "force_installed"; }; # Return YT Dislike (verify ID)
+         "addon@darkreader.org" = { installation_mode = "force_installed"; };
+         "keepassxc-browser@keepassxc.org" = { installation_mode = "force_installed"; };
+       };
      };
+     */
 
-     # 2. Install extensions declaratively
-     extensions.packages = with addons; [
-       ublock-origin
-       leechblock-ng
-       clearurls
-       return-youtube-dislike
-       darkreader
-       keepassxc-browser
-       # The next ones may or may not exist in rycee’s set by these exact names.
-       # If they fail evaluation, see section 3 (how to find names / add missing).
-       link-sanitizer
-       unhook
-       # youtube-shorts block (often named differently; see section 3)
-     ];
+     profiles.default = {
+       # 1. These map to about:config prefs
+       settings = {
+         # make sure password saving is enabled
+         "signon.rememberSignons" = true;
 
-     # 3. Force “Allowed in Private Windows” via the internal permission
-     # This is the same concept as extension-preferences.json’s permissions list.
-     # Known IDs (confirmed):
-     extensions.settings = {
-        "uBlock0@raymondhill.net".permissions = [ "internal:privateBrowsingAllowed" ];
-        "leechblockng@proginosko.com".permissions = [ "internal:privateBrowsingAllowed" ];
-        "{74145f27-f039-47ce-a470-a662b129930a}".permissions = [ "internal:privateBrowsingAllowed" ]; # ClearURLs
-        "{762f9885-5a13-4abd-9c77-433dcd38b8fd}".permissions = [ "internal:privateBrowsingAllowed" ]; # Return YT Dislike
-        "addon@darkreader.org".permissions = [ "internal:privateBrowsingAllowed" ];
-        "keepassxc-browser@keepassxc.org".permissions = [ "internal:privateBrowsingAllowed" ];
+         # prompt to save logins + allow autofill
+         "signon.autofillForms" = true;
+         "signon.formlessCapture.enabled" = true;
 
-        # TODO: fill these IDs once installed (about:support → Add-ons section):
-        # "<LINK_SANITIZER_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
-        # "<UNHOOK_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
-        # "<YT_SHORTS_BLOCK_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
+         # Send “dark mode preferred” to websites
+         "layout.css.prefers-color-scheme.content-override" = 0;
+
+         # optional: stop LibreWolf from wiping things on exit (often why it "won't save")
+         "privacy.clearOnShutdown.cookies" = false;
+         "privacy.clearOnShutdown.history" = false;
+         "privacy.clearOnShutdown.sessions" = false;
+
+         # optional: if you want it to remember site logins/sessions
+         "privacy.clearOnShutdown.offlineApps" = false;
+         "privacy.clearOnShutdown.siteSettings" = false;
+
+        # Secure DNS: “Let LibreWolf choose”
+        #
+        # network.trr.mode meanings (relevant ones):
+        # 0 = off by default, 1 = browser chooses/race, 2 = TRR first w/ fallback,
+        # 3 = TRR only, 5 = completely disabled by choice. :contentReference[oaicite:2]{index=2}
+        #
+        # “Let browser decide” best matches 1 (race/choose).
+        "network.trr.mode" = 0;
+       };
+
+       # 2. Install extensions declaratively
+       extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
+         ublock-origin
+         leechblock-ng
+         clearurls
+         return-youtube-dislikes
+         darkreader
+         keepassxc-browser
+         # The next ones may or may not exist in rycee’s set by these exact names.
+         # If they fail evaluation, see section 3 (how to find names / add missing).
+         link-cleaner
+         remove-youtube-s-suggestions
+         youtube-shorts-block # youtube-shorts block (often named differently; see section 3)
+       ];
+
+
+       /*
+       #----this won't work due to permision issues----
+       # 3. Force “Allowed in Private Windows” via the internal permission
+       # This is the same concept as extension-preferences.json’s permissions list.
+       # Known IDs (confirmed):
+       extensions.settings = {
+          "uBlock0@raymondhill.net".permissions = [ "internal:privateBrowsingAllowed" ];
+          "leechblockng@proginosko.com".permissions = [ "internal:privateBrowsingAllowed" ];
+          "{74145f27-f039-47ce-a470-a662b129930a}".permissions = [ "internal:privateBrowsingAllowed" ]; # ClearURLs
+          "{762f9885-5a13-4abd-9c77-433dcd38b8fd}".permissions = [ "internal:privateBrowsingAllowed" ]; # Return YT Dislike
+          "addon@darkreader.org".permissions = [ "internal:privateBrowsingAllowed" ];
+          "keepassxc-browser@keepassxc.org".permissions = [ "internal:privateBrowsingAllowed" ];
+
+          # TODO: fill these IDs once installed (about:support → Add-ons section):
+          # "<LINK_SANITIZER_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
+          # "<UNHOOK_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
+          # "<YT_SHORTS_BLOCK_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
+        };
+	*/
       };
   };
+
+  home.file.".librewolf/default/extension-preferences.json".text = builtins.toJSON {
+    # Each key is the extension ID
+    "uBlock0@raymondhill.net" = {
+      permissions = [ "internal:privateBrowsingAllowed" ];
+    };
+    "addon@darkreader.org" = {
+      permissions = [ "internal:privateBrowsingAllowed" ];
+    };
+    "leechblockng@proginosko.com" = {
+      permissions = [ "internal:privateBrowsingAllowed" ];
+    };
+    "{74145f27-f039-47ce-a470-a662b129930a}" = {
+      permissions = [ "internal:privateBrowsingAllowed" ];
+    }; # ClearURLs
+    "{762f9885-5a13-4abd-9c77-433dcd38b8fd}" = {
+      permissions = [ "internal:privateBrowsingAllowed" ];
+    }; # Return YouTube Dislike (adjust if your addon ID differs)
+    "keepassxc-browser@keepassxc.org" = {
+      permissions = [ "internal:privateBrowsingAllowed" ];
+    };
+  
+    # Add the rest once you know their IDs:
+    # "<UNHOOK_ID>" = { permissions = [ "internal:privateBrowsingAllowed" ]; };
+    # "<SHORTS_BLOCK_ID>" = { permissions = [ "internal:privateBrowsingAllowed" ]; };
+    # "<LINK_SANITIZER_ID>" = { permissions = [ "internal:privateBrowsingAllowed" ]; };
+  };
+  
 
    #Shell (fish)
    /*
