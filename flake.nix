@@ -19,7 +19,7 @@
 
                ({ ... }: {
                  nixpkgs.overlays = [
-		   nur.overlay
+		   nur.overlays
                    (final: prev: {
                      waterfox = final.callPackage ./pkgs/waterfox-bin { };
                    })
