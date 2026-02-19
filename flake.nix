@@ -31,7 +31,7 @@
 	       {
 	          home-manager.useGlobalPkgs = true;
 		  home-manager.useUserPackages = true;
-		  home-manager.backupFileExtension = "bak";
+		  home-manager.backupCommand = "mv -f $1 $1.bak.$(date +%Y%m%d-%H%M%S)";
 		  home-manager.users.nix = import ./home.nix;
 	       }
             ];
