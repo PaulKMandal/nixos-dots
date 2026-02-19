@@ -173,6 +173,10 @@
      BROWSER = "librefox";
    };
 
+   #LibreWolf Config
+   let
+     addons = pkgs.nur.repos.rycee.firefox-addons;
+   in
    programs.librewolf = {
      enable = true;
 
