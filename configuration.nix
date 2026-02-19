@@ -9,6 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./modules/zed/configuration.nix
+      ./modules/syncthing/configuration.nix
       ./options.nix
     ];
 
