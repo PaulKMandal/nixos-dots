@@ -9,7 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./modules/zed/configuration.nix
-      ./modules/syncthing/configuration.nix
+      #./modules/syncthing/configuration.nix #Currently borked
       ./options.nix
     ];
 
@@ -114,7 +114,8 @@
      libreoffice
      pciutils
      ripgrep
-     waterfox
+     #waterfox #Not working
+     librewolf
      xdg-utils
      zed-editor
      signal-desktop
