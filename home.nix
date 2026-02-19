@@ -197,7 +197,13 @@
        "privacy.clearOnShutdown.offlineApps" = false;
        "privacy.clearOnShutdown.siteSettings" = false;
 
-      # Secure DNS: “Let LibreWolf choose” (don’t force DoH)
+      # (B) Secure DNS: “Let LibreWolf choose”
+      #
+      # network.trr.mode meanings (relevant ones):
+      # 0 = off by default, 1 = browser chooses/race, 2 = TRR first w/ fallback,
+      # 3 = TRR only, 5 = completely disabled by choice. :contentReference[oaicite:2]{index=2}
+      #
+      # “Let browser decide” best matches 1 (race/choose).
       "network.trr.mode" = 0;
      };
   };
