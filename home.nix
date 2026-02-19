@@ -185,6 +185,9 @@
        "signon.autofillForms" = true;
        "signon.formlessCapture.enabled" = true;
 
+       # Send “dark mode preferred” to websites
+       "layout.css.prefers-color-scheme.content-override" = 0;
+
        # optional: stop LibreWolf from wiping things on exit (often why it "won't save")
        "privacy.clearOnShutdown.cookies" = false;
        "privacy.clearOnShutdown.history" = false;
@@ -193,6 +196,9 @@
        # optional: if you want it to remember site logins/sessions
        "privacy.clearOnShutdown.offlineApps" = false;
        "privacy.clearOnShutdown.siteSettings" = false;
+
+      # Secure DNS: “Let LibreWolf choose” (don’t force DoH)
+      "network.trr.mode" = 0;
      };
   };
 
