@@ -159,9 +159,9 @@
    xdg.mimeApps = {
      enable = true;
      defaultApplications = {
-       "text/html" = [ "waterfox.desktop" ];
-       "x-scheme-handler/http" = [ "waterfox.desktop" ];
-       "x-scheme-handler/https" = [ "waterfox.desktop" ];
+       "text/html" = [ "librewolf.desktop" ];
+       "x-scheme-handler/http" = [ "librewolf.desktop" ];
+       "x-scheme-handler/https" = [ "librewolf.desktop" ];
 
        "inode/directory" = [ "thunar.desktop" ];
        "x-scheme-handler/file" = [ "thunar.desktop" ];
