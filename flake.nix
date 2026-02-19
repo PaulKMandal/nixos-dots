@@ -18,7 +18,7 @@
 	    modules = [
 
                ({ ... }: {
-                 nixpkgs.overlays = [
+                 nixpkgs.overlays.default = [
 		   nur.overlays
                    (final: prev: {
                      waterfox = final.callPackage ./pkgs/waterfox-bin { };
