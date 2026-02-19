@@ -176,7 +176,7 @@
    programs.librewolf = {
      enable = true;
 
-     # These map to about:config prefs
+     # 1. These map to about:config prefs
      settings = {
        # make sure password saving is enabled
        "signon.rememberSignons" = true;
@@ -197,7 +197,7 @@
        "privacy.clearOnShutdown.offlineApps" = false;
        "privacy.clearOnShutdown.siteSettings" = false;
 
-      # (B) Secure DNS: “Let LibreWolf choose”
+      # Secure DNS: “Let LibreWolf choose”
       #
       # network.trr.mode meanings (relevant ones):
       # 0 = off by default, 1 = browser chooses/race, 2 = TRR first w/ fallback,
@@ -206,6 +206,38 @@
       # “Let browser decide” best matches 1 (race/choose).
       "network.trr.mode" = 0;
      };
+
+     # 2. Install extensions declaratively
+     extensions.packages = with addons; [
+       ublock-origin
+       leechblock-ng
+       clearurls
+       return-youtube-dislike
+       darkreader
+       keepassxc-browser
+       # The next ones may or may not exist in rycee’s set by these exact names.
+       # If they fail evaluation, see section 3 (how to find names / add missing).
+       link-sanitizer
+       unhook
+       # youtube-shorts block (often named differently; see section 3)
+     ];
+
+     # 3. Force “Allowed in Private Windows” via the internal permission
+     # This is the same concept as extension-preferences.json’s permissions list.
+     # Known IDs (confirmed):
+     extensions.settings = {
+        "uBlock0@raymondhill.net".permissions = [ "internal:privateBrowsingAllowed" ];
+        "leechblockng@proginosko.com".permissions = [ "internal:privateBrowsingAllowed" ];
+        "{74145f27-f039-47ce-a470-a662b129930a}".permissions = [ "internal:privateBrowsingAllowed" ]; # ClearURLs
+        "{762f9885-5a13-4abd-9c77-433dcd38b8fd}".permissions = [ "internal:privateBrowsingAllowed" ]; # Return YT Dislike
+        "addon@darkreader.org".permissions = [ "internal:privateBrowsingAllowed" ];
+        "keepassxc-browser@keepassxc.org".permissions = [ "internal:privateBrowsingAllowed" ];
+
+        # TODO: fill these IDs once installed (about:support → Add-ons section):
+        # "<LINK_SANITIZER_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
+        # "<UNHOOK_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
+        # "<YT_SHORTS_BLOCK_ID>".permissions = [ "internal:privateBrowsingAllowed" ];
+      };
   };
 
    #Shell (fish)
