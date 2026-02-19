@@ -177,6 +177,7 @@
    programs.librewolf = {
      enable = true;
      profiles.default = {
+       /* !Commented out to not accidentally nuke settings, but uncomment if it is your first build.
        settings = {
          # make sure password saving is enabled
          "signon.rememberSignons" = true;
@@ -205,7 +206,7 @@
         #
         # “Let browser decide” best matches 1 (race/choose).
         "network.trr.mode" = 0;
-       };
+       }; */
   
        # 2. Install extensions declaratively
        extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
