@@ -5,70 +5,41 @@
 
 {
   imports =
-    [ (modulesPath + "/hardware/network/broadcom-43xx.nix")
-      (modulesPath + "/installer/scan/not-detected.nix")
+    [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-intel" ];
+  boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "thunderbolt" "usb_storage" "usbhid" "sd_mod" ];
+  boot.initrd.kernelModules = [ "dm-snapshot" ];
+  boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/mapper/luks-76011fbb-d048-43bf-8024-855d39165ec6";
-      fsType = "btrfs";
-      options = [ "subvol=@" ];
+    { device = "/dev/mapper/vg-root";
+      fsType = "ext4";
     };
 
-  boot.initrd.luks.devices."luks-76011fbb-d048-43bf-8024-855d39165ec6".device = "/dev/disk/by-uuid/76011fbb-d048-43bf-8024-855d39165ec6";
-
-  #decrypt second drive
-  boot.initrd.luks.devices."luks-e5423630-8055-4543-84a6-a610ef465f95".device = "/dev/disk/by-uuid/e5423630-8055-4543-84a6-a610ef465f95";
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/0BC6-8FC5";
+      fsType = "vfat";
+      options = [ "fmask=0022" "dmask=0022" ];
+    };
 
   fileSystems."/home" =
-    { device = "/dev/mapper/luks-76011fbb-d048-43bf-8024-855d39165ec6";
+    { device = "/dev/mapper/vg-home";
       fsType = "btrfs";
       options = [ "subvol=@home" ];
     };
 
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/567C-AD71";
-      fsType = "vfat";
-      options = [ "fmask=0077" "dmask=0077" ];
+  fileSystems."/home/.snapshots" =
+    { device = "/dev/mapper/vg-home";
+      fsType = "btrfs";
+      options = [ "subvol=@home-snapshots" ];
     };
 
-  #mount btrfs main subvolume for second drive
-  fileSystems."/mnt/Data" = {
-    device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
-    fsType = "btrfs";
-    options = [ "subvol=@data" "compress=zstd" "noatime" ];
-  };
-  
-  #mount btrfs snapshot subvolume for second drive
-  fileSystems."/mnt/Data/.snapshots" = {
-    device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
-    fsType = "btrfs";
-    options = [ "subvol=@snapshots" "compress=zstd" "noatime" ];
-  };
-  
-  #Mount btrfs scratch (untracked) subvolume for second drive
-  fileSystems."/mnt/Data/.scratch" = {
-    device = "/dev/mapper/luks-e5423630-8055-4543-84a6-a610ef465f95";
-    fsType = "btrfs";
-    options = [ "subvol=@scratch" "compress=zstd" "noatime" ];
-  };
-
-  swapDevices = [ ];
+  swapDevices =
+    [ { device = "/dev/mapper/vg-swap"; }
+    ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
-  systemd.tmpfiles.rules = [
-    "d /mnt/Data 0755 root root - -"
-    "d /mnt/Data/.snapshots 0755 root root - -"
-    "d /mnt/Data/.scratch 0755 root root - -"
-  ];
-
-  #We want to bookmark /mnt/Data, so set this to true
-  disks.hasDataMount = true;
-
+  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

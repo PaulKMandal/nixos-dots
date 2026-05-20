@@ -8,6 +8,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./storage.nix
       ./modules/zed/configuration.nix
       #./modules/syncthing/configuration.nix #Currently borked
       ./options.nix
@@ -182,12 +183,12 @@
 
 
   # Use NVIDIA proprietary driver
-  services.xserver.videoDrivers = [ "nvidia" ];
+  #services.xserver.videoDrivers = [ "nvidia" ];
 
-  hardware.nvidia = {
-    modesetting.enable = true;  # needed for modern Wayland/DRM path
-    open = false;               # start with proprietary kernel module
-  };
+  #hardware.nvidia = {
+  #  modesetting.enable = true;  # needed for modern Wayland/DRM path
+  #  open = false;               # start with proprietary kernel module
+  #};
 
   hardware.graphics = {
     enable = true;
