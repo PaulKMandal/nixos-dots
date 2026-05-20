@@ -125,7 +125,7 @@
      cryptsetup
      lvm2
      tree
-     
+
      sirikali
      #SiriKali filesystem backends
      cryfs
@@ -137,11 +137,15 @@
 
      #Needed for yubikey use (ykchalresp) with 3rd party apps.
      yubikey-personalization
+     yubioath-flutter      # Yubico Authenticator GUI
+     yubikey-manager       # ykman CLI
+     yubico-piv-tool       # PIV/smartcard tooling
   ];
 
   #Needed for non-root use of yubikey tools (e.g. ykchalresp)
   services.udev.packages = with pkgs; [
     yubikey-personalization
+    libfido2
   ];
 
   #needed for PIV/GPG use with yubikey
@@ -154,7 +158,7 @@
 
   #Enable fish
   programs.fish.enable = false;
-  
+
   #Enable zsh
   programs.zsh.enable = true;
 
