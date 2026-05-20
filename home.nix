@@ -34,6 +34,11 @@
       dconf               # for gsettings/dconf
    ];
 
+   home.file.".gnupg/scdaemon.conf".text = ''
+      disable-ccid
+      pcsc-shared
+      '';
+
    # XDG user folders. Thunar uses this file to recognize special home
    # folders and show folder-specific icons for Downloads, Documents,
    # Pictures, Music, Videos, etc. Home Manager will also create them.
