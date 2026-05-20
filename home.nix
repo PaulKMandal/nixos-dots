@@ -34,6 +34,23 @@
       dconf               # for gsettings/dconf
    ];
 
+   # XDG user folders. Thunar uses this file to recognize special home
+   # folders and show folder-specific icons for Downloads, Documents,
+   # Pictures, Music, Videos, etc. Home Manager will also create them.
+   xdg.userDirs = {
+     enable = true;
+     createDirectories = true;
+
+     desktop = "${config.home.homeDirectory}/Desktop";
+     documents = "${config.home.homeDirectory}/Documents";
+     download = "${config.home.homeDirectory}/Downloads";
+     music = "${config.home.homeDirectory}/Music";
+     pictures = "${config.home.homeDirectory}/Pictures";
+     publicShare = "${config.home.homeDirectory}/Public";
+     templates = "${config.home.homeDirectory}/Templates";
+     videos = "${config.home.homeDirectory}/Videos";
+   };
+
    #Sway
    wayland.windowManager.sway = {
       enable = true;
@@ -348,6 +365,14 @@
     gtk-theme = "adw-gtk3-dark";
     icon-theme = "Papirus-Dark";
   };
+
+  # Mako notifications. The default timeout is 0, which leaves
+  # notifications visible until dismissed. ignore-timeout makes even
+  # persistent app notifications expire after this timeout.
+  xdg.configFile."mako/config".text = ''
+    default-timeout=5000
+    ignore-timeout=1
+  '';
 
   #Services
   systemd.user.services.protonmail-bridge = {
