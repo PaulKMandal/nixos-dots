@@ -196,6 +196,9 @@
 
    home.sessionVariables = {
      BROWSER = "librefox";
+     EDITOR = "nvim";
+     VISUAL = "nvim";
+     SOPS_EDITOR = "nvim";
    };
 
    #LibreWolf Config
