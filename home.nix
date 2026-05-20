@@ -147,6 +147,9 @@
 	   # polkit agent (needed so mounting is authorized)
            { command = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1"; always = true; }
 
+           # NetworkManager tray applet / secret agent
+           { command = "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator"; always = true; }
+
            # automounter
            { command = "${pkgs.udiskie}/bin/udiskie --tray --appindicator"; always = true; }
 	];

@@ -35,6 +35,9 @@
   # Enable networking
   networking.networkmanager.enable = true;
 
+  # Proton VPN / WireGuard policy routing can fail with strict reverse-path filtering.
+  networking.firewall.checkReversePath = "loose";
+
   # Set your time zone.
   time.timeZone = "America/Chicago";
 
@@ -105,6 +108,8 @@
      polkit_gnome
      pavucontrol
      networkmanagerapplet
+     protonvpn-gui
+     wireguard-tools
      python3
      protonmail-bridge
      protonmail-bridge-gui
