@@ -8,7 +8,7 @@ keys:
   - &yubikey_gpg 955986AF6BFBECAF1605620C2F0C8012A924FBAA
 
 creation_rules:
-  - path_regex: ^secrets/sops\.yaml$
+  - path_regex: ^secrets/.*\.yaml$
     key_groups:
       - age:
           - *nixos_laptop_age

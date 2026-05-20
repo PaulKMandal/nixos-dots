@@ -1,0 +1,18 @@
+# Plaintext or staged secret material.
+secrets/**/*.tmp
+secrets/**/*.plain
+secrets/**/*.dec
+secrets/**/*.decrypted
+secrets/**/*.key
+secrets/**/*.pem
+secrets/**/*.p12
+secrets/**/*.pfx
+secrets/**/*.conf
+secrets/**/*.asc
+
+# Encrypted backups are okay to commit.
+!secrets/**/*.gpg
+!secrets/**/*.asc.gpg
+
+# Public GPG export is okay if you choose to store it here.
+!secrets/gpg/public.asc

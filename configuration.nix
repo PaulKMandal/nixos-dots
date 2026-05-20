@@ -2,13 +2,15 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./storage.nix
+      ./modules/secrets.nix
+      ./modules/wireguard.nix
       ./modules/zed/configuration.nix
       #./modules/syncthing/configuration.nix #Currently borked
       ./options.nix
@@ -74,43 +76,6 @@
   nixpkgs.config.allowUnfree = true;
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
-
-  # sops-nix secret management.
-  #
-  # The local age key lets rebuilds work after boot without requiring the
-  # YubiKey every time. Back up this age key encrypted to your YubiKey/GPG key.
-  #
-  # Runtime secrets should be placed in /run/secrets, not in the Nix store and
-  # not persistently in the user's home directory.
-  sops = {
-    age.keyFile = "/var/lib/sops-nix/age/keys.txt";
-    defaultSopsFormat = "yaml";
-  } // lib.optionalAttrs (builtins.pathExists ./secrets/sops.yaml) {
-    defaultSopsFile = ./secrets/sops.yaml;
-
-    secrets = {
-      "wireguard/proton_ca924_conf" = {
-        path = "/run/secrets/wireguard/proton_ca924.conf";
-        owner = "root";
-        group = "root";
-        mode = "0600";
-      };
-
-      "wireguard/proton_ca924_filter_conf" = {
-        path = "/run/secrets/wireguard/proton_ca924_filter.conf";
-        owner = "root";
-        group = "root";
-        mode = "0600";
-      };
-
-      "wireguard/gpu_server_conf" = {
-        path = "/run/secrets/wireguard/gpu_server.conf";
-        owner = "root";
-        group = "root";
-        mode = "0600";
-      };
-    };
-  };
 
   xdg.portal = {
      enable = true;
@@ -186,9 +151,6 @@
      gnupg
      pcsc-tools
 
-     # Secret management
-     age
-     sops
   ];
 
   #Needed for non-root use of yubikey tools (e.g. ykchalresp)
@@ -319,10 +281,6 @@ fonts.packages = with pkgs; [
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
-  # Directory for the local age identity used by sops-nix.
-  system.activationScripts.ensureSopsAgeDir.text = ''
-    install -d -m 0700 -o root -g root /var/lib/sops-nix/age
-  '';
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];

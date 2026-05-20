@@ -9,13 +9,19 @@ This repo uses a hybrid model:
 
 ## Runtime secrets
 
-The main SOPS file is:
+Runtime secrets are stored in encrypted SOPS YAML files under:
 
 ```text
-secrets/sops.yaml
+secrets/*.yaml
 ```
 
-It should contain runtime secrets such as WireGuard configs:
+WireGuard secrets currently live in:
+
+```text
+secrets/wireguard.yaml
+```
+
+The Nix declarations for these secrets live in `modules/wireguard.nix`.
 
 ```yaml
 wireguard:
