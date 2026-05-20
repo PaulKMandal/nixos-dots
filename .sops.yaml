@@ -1,7 +1,7 @@
 keys:
-  # Replace this after creating /var/lib/sops-nix/age/keys.txt.
+  # User-owned age key for both normal editing and nixos-rebuild.
   # Get it with:
-  #   sudo grep 'public key:' /var/lib/sops-nix/age/keys.txt
+  #   grep 'public key:' ~/.config/sops/age/keys.txt
   - &nixos_laptop_age age1uhxcp823f44hvnmdr4cm78ax8zl72gvuptrrhmz7m3rs8mk2t9gqe89v2f
 
   # YubiKey-backed GPG key.

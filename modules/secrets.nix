@@ -8,12 +8,12 @@
   # GPG key.
   #
   # Local key:
-  #   /var/lib/sops-nix/age/keys.txt
+  #   /home/nix/.config/sops/age/keys.txt
   #
   # Encrypted backup:
   #   secrets/bootstrap/sops-age-key.txt.asc.gpg
   sops = {
-    age.keyFile = "/var/lib/sops-nix/age/keys.txt";
+    age.keyFile = "/home/nix/.config/sops/age/keys.txt";
     defaultSopsFormat = "yaml";
   };
 
@@ -23,7 +23,8 @@
   ];
 
   # Directory for the local age identity used by sops-nix.
+  # This is user-owned so normal `sops secrets/*.yaml` works without sudo.
   system.activationScripts.ensureSopsAgeDir.text = ''
-    install -d -m 0700 -o root -g root /var/lib/sops-nix/age
+    install -d -m 0700 -o nix -g users /home/nix/.config/sops/age
   '';
 }

@@ -165,7 +165,7 @@
   #needed for fuse mounts (SiriKali)
   programs.fuse.userAllowOther = true;
 
-  environment.variables.EDITOR = "neovim";
+  environment.variables.EDITOR = "nvim";
 
   #Enable fish
   programs.fish.enable = false;
