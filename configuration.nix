@@ -140,6 +140,9 @@
      yubioath-flutter      # Yubico Authenticator GUI
      yubikey-manager       # ykman CLI
      yubico-piv-tool       # PIV/smartcard tooling
+
+     gnupg
+     pcsctools
   ];
 
   #Needed for non-root use of yubikey tools (e.g. ykchalresp)
@@ -259,10 +262,11 @@ fonts.packages = with pkgs; [
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+   programs.gnupg.agent = {
+     enable = true;
+     enableSSHSupport = true;
+     pinentryPackage = pkgs.pinentry-qt;
+   };
 
   # List services that you want to enable:
 
