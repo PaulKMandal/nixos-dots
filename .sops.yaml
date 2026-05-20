@@ -2,7 +2,7 @@ keys:
   # Replace this after creating /var/lib/sops-nix/age/keys.txt.
   # Get it with:
   #   sudo grep 'public key:' /var/lib/sops-nix/age/keys.txt
-  - &nixos_laptop_age age1REPLACE_WITH_NIXOS_LAPTOP_AGE_PUBLIC_KEY
+  - &nixos_laptop_age age1uhxcp823f44hvnmdr4cm78ax8zl72gvuptrrhmz7m3rs8mk2t9gqe89v2f
 
   # YubiKey-backed GPG key.
   - &yubikey_gpg 955986AF6BFBECAF1605620C2F0C8012A924FBAA
