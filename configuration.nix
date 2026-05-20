@@ -142,7 +142,7 @@
      yubico-piv-tool       # PIV/smartcard tooling
 
      gnupg
-     pcsctools
+     pcsc-tools
   ];
 
   #Needed for non-root use of yubikey tools (e.g. ykchalresp)
