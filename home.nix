@@ -222,6 +222,17 @@
      DOOMDIR = "${config.home.homeDirectory}/.config/doom";
    };
 
+   programs.ssh = {
+     enable = true;
+
+     matchBlocks = {
+       "rhel-test" = {
+         hostname = "10.44.0.1";
+         user = "rhel";
+       };
+     };
+   };
+
    # Bootstrap Doom Emacs on fresh installs without making Doom itself a Nix
    # derivation. Nix installs Emacs and Doom's external dependencies, then this
    # activation step clones Doom and runs the first install only when missing.
