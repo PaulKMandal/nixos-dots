@@ -225,6 +225,10 @@ fonts.packages = with pkgs; [
   nerd-fonts."jetbrains-mono"
 ];
 
+  # Power management. Keep the laptop awake when the lid is closed on AC power.
+  # Closing the lid on battery still uses the default logind behavior.
+  services.logind.lidSwitchExternalPower = "ignore";
+
   #Enable keyring
   services.gnome.gnome-keyring.enable = true;
 
