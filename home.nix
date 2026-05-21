@@ -36,6 +36,7 @@
       # Doom Emacs and common external dependencies Doom expects.
       emacs-pgtk
       git
+      git-lfs
       ripgrep
       fd
       gcc
