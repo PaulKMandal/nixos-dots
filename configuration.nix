@@ -11,6 +11,7 @@
       ./storage.nix
       ./modules/secrets.nix
       ./modules/wireguard.nix
+      ./modules/virtualization/configuration.nix
       ./modules/zed/configuration.nix
       #./modules/syncthing/configuration.nix #Currently borked
       ./options.nix
