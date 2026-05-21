@@ -145,6 +145,7 @@
 
      #Needed for yubikey use (ykchalresp) with 3rd party apps.
      yubikey-personalization
+     ykfde-open
      yubioath-flutter      # Yubico Authenticator GUI
      yubikey-manager       # ykman CLI
      yubico-piv-tool       # PIV/smartcard tooling

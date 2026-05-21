@@ -24,6 +24,7 @@
 		   nur.overlays.default
                    (final: prev: {
                      waterfox = final.callPackage ./pkgs/waterfox-bin { };
+                     ykfde-open = final.callPackage ./pkgs/ykfde-open { };
                    })
                  ];
                })
