@@ -226,6 +226,13 @@
      enable = true;
 
      matchBlocks = {
+       "github.com" = {
+         hostname = "github.com";
+         user = "git";
+         identityFile = "${config.home.homeDirectory}/.ssh/github-nixos-fw13";
+         identitiesOnly = true;
+       };
+
        "rhel-test" = {
          hostname = "10.44.0.1";
          user = "rhel";
