@@ -1,4 +1,4 @@
-{ config, pkgs, ...}:
+{ config, pkgs, lib, ...}:
 
 {
    imports = [
@@ -32,6 +32,22 @@
       papirus-icon-theme
       gnome-themes-extra  # fallback themes
       dconf               # for gsettings/dconf
+
+      # Doom Emacs and common external dependencies Doom expects.
+      emacs-pgtk
+      git
+      ripgrep
+      fd
+      gcc
+      gnumake
+      cmake
+      pkg-config
+      libvterm
+      sqlite
+      tree-sitter
+      nodejs
+      shellcheck
+      shfmt
    ];
 
    home.file.".gnupg/scdaemon.conf".text = ''
@@ -194,12 +210,69 @@
      };
    };
 
+   home.sessionPath = [
+     "${config.home.homeDirectory}/.config/emacs/bin"
+   ];
+
    home.sessionVariables = {
      BROWSER = "librefox";
      EDITOR = "nvim";
      VISUAL = "nvim";
      SOPS_EDITOR = "nvim";
+     DOOMDIR = "${config.home.homeDirectory}/.config/doom";
    };
+
+   # Bootstrap Doom Emacs on fresh installs without making Doom itself a Nix
+   # derivation. Nix installs Emacs and Doom's external dependencies, then this
+   # activation step clones Doom and runs the first install only when missing.
+   # Normal rebuilds skip Doom, so Doom is not rebuilt on each switch.
+   home.activation.bootstrapDoomEmacs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+     set -eu
+
+     export PATH="${lib.makeBinPath [
+       pkgs.coreutils
+       pkgs.findutils
+       pkgs.git
+       pkgs.emacs-pgtk
+       pkgs.ripgrep
+       pkgs.fd
+       pkgs.gcc
+       pkgs.gnumake
+       pkgs.cmake
+       pkgs.pkg-config
+     ]}:$PATH"
+
+     doom_emacs_dir="${config.home.homeDirectory}/.config/emacs"
+     doom_bin="$doom_emacs_dir/bin/doom"
+     need_install=0
+
+     if [ -e "$doom_emacs_dir" ] && [ ! -d "$doom_emacs_dir/.git" ]; then
+       echo "Doom bootstrap: $doom_emacs_dir exists but is not a git checkout; refusing to overwrite it."
+       exit 1
+     fi
+
+     if [ ! -d "$doom_emacs_dir/.git" ]; then
+       echo "Doom bootstrap: cloning Doom Emacs into $doom_emacs_dir"
+       ${pkgs.git}/bin/git clone --depth 1 https://github.com/doomemacs/doomemacs "$doom_emacs_dir"
+       need_install=1
+     fi
+
+     if [ ! -x "$doom_bin" ]; then
+       echo "Doom bootstrap: $doom_bin is missing or not executable."
+       exit 1
+     fi
+
+     if [ ! -d "$doom_emacs_dir/.local" ]; then
+       need_install=1
+     fi
+
+     if [ "$need_install" = 1 ]; then
+       echo "Doom bootstrap: running first-time doom install"
+       "$doom_bin" install --config --env --install --hooks
+     else
+       echo "Doom bootstrap: Doom already installed; skipping doom install"
+     fi
+   '';
 
    #LibreWolf Config
    programs.librewolf = {
