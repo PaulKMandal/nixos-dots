@@ -229,6 +229,8 @@
        "rhel-test" = {
          hostname = "10.44.0.1";
          user = "rhel";
+         identityFile = "${config.home.homeDirectory}/.ssh/rhel-test";
+         identitiesOnly = true;
        };
      };
    };
