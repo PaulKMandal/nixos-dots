@@ -32,7 +32,7 @@
     swtpm
     virt-viewer
     win-spice
-    win-virtio
+    virtio-win
   ];
 
   system.activationScripts.ensureHomeVmDirs.text = ''

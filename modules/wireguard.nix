@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 
 let
   wireguardSecretsFile = ../secrets/wireguard.yaml;
@@ -39,29 +39,22 @@ in
   };
 
   # Let wg-quick use normal names like:
-  #   sudo wg-quick up proton_ca924
-  # while keeping the decrypted secret files under /run/secrets.
-  system.activationScripts.linkWireGuardConfigs.text = lib.optionalString hasWireguardSecrets ''
-    install -d -m 0700 -o root -g root /etc/wireguard
+  #   sudo wg-quick up gpu_server
+  # while keeping the decrypted secret material under /run/secrets.
+  #
+  # Do this through environment.etc instead of an activation script. NixOS owns
+  # /etc during activation, so hand-created /etc/wireguard links can disappear
+  # after a rebuild or boot.
+  environment.etc = lib.optionalAttrs hasWireguardSecrets {
+    "wireguard/proton_ca924.conf".source =
+      config.sops.secrets."wireguard/proton_ca924_conf".path;
 
-    link_wg_conf() {
-      local name="$1"
-      local target="/run/secrets/wireguard/$name.conf"
-      local link="/etc/wireguard/$name.conf"
+    "wireguard/proton_ca924_filter.conf".source =
+      config.sops.secrets."wireguard/proton_ca924_filter_conf".path;
 
-      if [ -e "$link" ] && [ ! -L "$link" ]; then
-        echo "Refusing to replace non-symlink $link" >&2
-        echo "Move it out of the way or import it into secrets/wireguard.yaml first." >&2
-        exit 1
-      fi
-
-      ln -sfn "$target" "$link"
-    }
-
-    link_wg_conf proton_ca924
-    link_wg_conf proton_ca924_filter
-    link_wg_conf gpu_server
-  '';
+    "wireguard/gpu_server.conf".source =
+      config.sops.secrets."wireguard/gpu_server_conf".path;
+  };
 
   # Later, this module is also where wg-quick, NetworkManager, or systemd
   # integration should go.
