@@ -110,6 +110,7 @@
      wl-clipboard
      polkit_gnome
      pavucontrol
+     mpv
      networkmanagerapplet
      protonvpn-gui
      wireguard-tools
