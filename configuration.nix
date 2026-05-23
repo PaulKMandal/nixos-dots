@@ -69,7 +69,7 @@
   users.users.nix = {
     isNormalUser = true;
     description = "Nix";
-    extraGroups = [ "networkmanager" "wheel" "audio" "video" "input"];
+    extraGroups = [ "networkmanager" "wheel" "audio" "video" "input" "adbusers" ];
     packages = with pkgs; [];
   };
 
@@ -111,6 +111,18 @@
      polkit_gnome
      pavucontrol
      mpv
+
+     # GrapheneOS / Android flashing and troubleshooting.
+     # android-tools provides adb and fastboot for the CLI installer.
+     android-tools
+     # The WebUSB installer needs a Chromium-based browser; Firefox/LibreWolf do not work for it.
+     chromium
+     curl
+     libarchive # bsdtar, used by the GrapheneOS CLI install guide on Linux
+     openssh    # ssh-keygen -Y verify for factory image signatures
+     unzip
+     usbutils   # lsusb for USB/fastboot troubleshooting
+
      networkmanagerapplet
      protonvpn-gui
      wireguard-tools
@@ -155,6 +167,10 @@
      pcsc-tools
 
   ];
+
+  # Enables Android udev integration for adb/fastboot non-root access.
+  # The nix user is in adbusers above.
+  programs.adb.enable = true;
 
   #Needed for non-root use of yubikey tools (e.g. ykchalresp)
   services.udev.packages = with pkgs; [
