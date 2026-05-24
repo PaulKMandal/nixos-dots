@@ -94,6 +94,7 @@
 	  "${modifier}+Shift+c"  = "reload";
 	  "${modifier}+Shift+e"  = "exec swaynag -t warning -m 'Exit sway?' -b 'Yes' 'swaymsg exit'";
 	  "Print"       = "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
+	  "Shift+F12"   = "exec ${pkgs.bash}/bin/bash -lc 'set -euo pipefail; dir=\"$HOME/Pictures/Screenshots\"; mkdir -p \"$dir\"; file=\"$dir/$(date +screenshot-%Y%m%d-%H%M%S.png)\"; area=\"$(${pkgs.slurp}/bin/slurp)\" || exit 0; ${pkgs.grim}/bin/grim -g \"$area\" - | tee \"$file\" | ${pkgs.wl-clipboard}/bin/wl-copy --type image/png'";
 
 	  # --- focus movement (vim keys + arrows) ---
 	  "${modifier}+h"        = "focus left";
