@@ -74,6 +74,22 @@
      videos = "${config.home.homeDirectory}/Videos";
    };
 
+   xdg.desktopEntries = {
+     "vault-mount" = {
+       name = "Vault Mount";
+       exec = "${pkgs.kitty}/bin/kitty -e ${config.home.homeDirectory}/.bin/vault-mount";
+       terminal = false;
+       categories = [ "Utility" ];
+     };
+
+     "vault-unmount" = {
+       name = "Vault Unmount";
+       exec = "${pkgs.kitty}/bin/kitty -e ${config.home.homeDirectory}/.bin/vault-unmount";
+       terminal = false;
+       categories = [ "Utility" ];
+     };
+   };
+
    #Sway
    wayland.windowManager.sway =
      let
