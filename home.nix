@@ -7,6 +7,7 @@
 
    home.stateVersion = "25.11";
 
+
    home.packages = with pkgs; [
       kitty
       rofi
@@ -74,7 +75,11 @@
    };
 
    #Sway
-   wayland.windowManager.sway = {
+   wayland.windowManager.sway =
+     let
+       appLauncher = "${pkgs.wofi}/bin/wofi --show drun";
+       commandLauncher = "${pkgs.wofi}/bin/wofi --show run";
+     in {
       enable = true;
       
       systemd.enable = true;
@@ -82,13 +87,14 @@
       config = rec {
          modifier = "Mod4"; #modifier
 	 terminal = "${pkgs.kitty}/bin/kitty";
-	 menu = "${pkgs.wofi}/bin/wofi --show drun";
+	 menu = appLauncher;
 
 	 #keybinds
 	 keybindings = {
 	   # --- basics ---
 	  "${modifier}+Return"   = "exec ${terminal}";
 	  "${modifier}+d"        = "exec ${menu}";
+	  "${modifier}+Shift+d"  = "exec ${commandLauncher}";
 	  "${modifier}+q"        = "kill";   # your preference
 	  "${modifier}+r" 	 = "exec ${pkgs.xfce.thunar}/bin/thunar";
 	  "${modifier}+Shift+c"  = "reload";
@@ -194,6 +200,11 @@
 
       extraSessionCommands = ''
          export WLR_NO_HARDWARE_CURSORS=1
+
+         # Ensure Sway itself, plus launchers started by Sway, can see
+         # executables stored in ~/.bin. home.sessionPath covers shells; this
+         # keeps the Wayland session environment in sync too.
+         export PATH="${config.home.homeDirectory}/.bin:$PATH"
       '';
 
    };
@@ -213,6 +224,7 @@
    };
 
    home.sessionPath = [
+     "$HOME/.bin"
      "${config.home.homeDirectory}/.config/emacs/bin"
    ];
 
