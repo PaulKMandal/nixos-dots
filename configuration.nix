@@ -83,7 +83,9 @@
      wlr.enable = true;
      extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
-
+  
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
   services.pipewire = {
      enable = true;
      pulse.enable = true;
@@ -117,6 +119,7 @@
      android-tools
      # The WebUSB installer needs a Chromium-based browser; Firefox/LibreWolf do not work for it.
      chromium
+     brave
      curl
      libarchive # bsdtar, used by the GrapheneOS CLI install guide on Linux
      openssh    # ssh-keygen -Y verify for factory image signatures
@@ -131,6 +134,8 @@
      protonmail-bridge-gui
      thunderbird
      keepassxc
+     libsecret # secret-tool; useful for Secret Service/keyring debugging
+     seahorse  # GUI keyring manager
      xfce.thunar
      veracrypt
      libreoffice
@@ -165,6 +170,8 @@
 
      gnupg
      pcsc-tools
+
+     kdePackages.kdenlive
 
   ];
 
@@ -248,8 +255,11 @@ fonts.packages = with pkgs; [
   # Closing the lid on battery still uses the default logind behavior.
   services.logind.lidSwitchExternalPower = "ignore";
 
-  #Enable keyring
+  # Secret Service/keyring support for Chromium-family browsers.
+  # PAM should unlock the login keyring at login so Chromium/Brave do not hang
+  # or prompt later when they try to use org.freedesktop.secrets.
   services.gnome.gnome-keyring.enable = true;
+  programs.seahorse.enable = true;
 
   security.pam.services.login.enableGnomeKeyring = true;
   #SysRq for debugging/dumping tasks

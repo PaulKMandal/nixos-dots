@@ -509,6 +509,7 @@
   '';
 
   #Services
+
   systemd.user.services.protonmail-bridge = {
     Unit = {
       Description = "Proton Mail Bridge";
