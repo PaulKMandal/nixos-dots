@@ -179,6 +179,9 @@
   # The nix user is in adbusers above.
   programs.adb.enable = true;
 
+  # Thunderbolt / USB4 dock authorization.
+  services.hardware.bolt.enable = true;
+
   #Needed for non-root use of yubikey tools (e.g. ykchalresp)
   services.udev.packages = with pkgs; [
     yubikey-personalization
