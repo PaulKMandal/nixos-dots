@@ -41,6 +41,27 @@
   # Proton VPN / WireGuard policy routing can fail with strict reverse-path filtering.
   networking.firewall.checkReversePath = "loose";
 
+  # CUPS / printer support. This enables local printing, common open printer
+  # drivers, driverless network discovery, IPP-over-USB, and the GTK printer UI.
+  services.printing = {
+    enable = true;
+    drivers = with pkgs; [
+      cups-filters
+      gutenprint
+      hplip
+      brlaser
+    ];
+  };
+
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
+  services.ipp-usb.enable = true;
+  programs.system-config-printer.enable = true;
+
   # Set your time zone.
   time.timeZone = "America/Chicago";
 
