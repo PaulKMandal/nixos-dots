@@ -50,6 +50,14 @@
       nodejs
       shellcheck
       shfmt
+
+      # LaTeX/PDF tooling for Doom's :lang latex and :tools pdf modules.
+      # The Doom config calls latexmk directly and uses pdf-tools as the viewer.
+      (texlive.combine {
+        inherit (texlive) scheme-medium latexmk latexindent;
+      })
+      biber
+      poppler_utils
    ];
 
    home.file.".gnupg/scdaemon.conf".text = ''
