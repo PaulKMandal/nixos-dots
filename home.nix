@@ -57,7 +57,7 @@
         inherit (texlive) scheme-medium latexmk latexindent;
       })
       biber
-      poppler_utils
+      poppler-utils
    ];
 
    home.file.".gnupg/scdaemon.conf".text = ''
