@@ -60,6 +60,13 @@
       poppler-utils
    ];
 
+   dconf = {
+     enable = true;
+     settings."org/gnome/system/proxy" = {
+       mode = "none";
+     };
+   };
+
    home.file.".gnupg/scdaemon.conf".text = ''
       disable-ccid
       pcsc-shared
@@ -253,7 +260,7 @@
    ];
 
    home.sessionVariables = {
-     BROWSER = "librefox";
+     BROWSER = "librewolf";
      EDITOR = "nvim";
      VISUAL = "nvim";
      SOPS_EDITOR = "nvim";

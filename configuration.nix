@@ -4,6 +4,23 @@
 
 { config, pkgs, ... }:
 
+let
+  wrapChromiumBrowser = name: package: binary:
+    pkgs.symlinkJoin {
+      inherit name;
+      paths = [ package ];
+      buildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        wrapProgram $out/bin/${binary} \
+          --add-flags "--proxy-server=direct://" \
+          --add-flags "--proxy-bypass-list=*" \
+          --add-flags "--disable-quic"
+      '';
+    };
+
+  chromiumDirect = wrapChromiumBrowser "chromium-direct" pkgs.chromium "chromium";
+  braveDirect = wrapChromiumBrowser "brave-direct" pkgs.brave "brave";
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -139,8 +156,8 @@
      # android-tools provides adb and fastboot for the CLI installer.
      android-tools
      # The WebUSB installer needs a Chromium-based browser; Firefox/LibreWolf do not work for it.
-     chromium
-     brave
+     chromiumDirect
+     braveDirect
      curl
      libarchive # bsdtar, used by the GrapheneOS CLI install guide on Linux
      openssh    # ssh-keygen -Y verify for factory image signatures
@@ -156,6 +173,7 @@
      thunderbird
      keepassxc
      libsecret # secret-tool; useful for Secret Service/keyring debugging
+     glib      # gsettings; useful for Chromium/GNOME proxy debugging
      seahorse  # GUI keyring manager
      xfce.thunar
      veracrypt
