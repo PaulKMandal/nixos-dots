@@ -51,12 +51,12 @@
       shellcheck
       shfmt
 
-      # LaTeX/PDF tooling for Doom's :lang latex and :tools pdf modules.
-      # The Doom config calls latexmk directly and uses pdf-tools as the viewer.
-      (texlive.combine {
-        inherit (texlive) scheme-medium latexmk latexindent;
-      })
-      biber
+      # Full TeX Live distribution for Doom's :lang latex module.
+      # Includes latexmk, latexindent, biber, and the broad package set
+      # needed for arbitrary templates/classes.
+      texlive.combined.scheme-full
+
+      # PDF tooling for Doom's :tools pdf module.
       poppler-utils
    ];
 
