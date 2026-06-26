@@ -13,12 +13,18 @@
     };
   };
 
+  virtualisation.docker = {
+    enable = true;
+  };
+
   users.users.nix.extraGroups = [
     "libvirtd"
     "kvm"
+    "docker"
   ];
 
   environment.systemPackages = with pkgs; [
+    docker-compose
     acl
     libosinfo
     libvirt

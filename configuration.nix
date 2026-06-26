@@ -28,6 +28,7 @@ in
       ./storage.nix
       ./modules/secrets.nix
       ./modules/wireguard.nix
+      ./modules/tor/configuration.nix
       ./modules/virtualization/configuration.nix
       ./modules/zed/configuration.nix
       #./modules/syncthing/configuration.nix #Currently borked
@@ -141,7 +142,7 @@ in
      wget
      sway
      rofi
-     firefox
+     #firefox
      kitty
      waybar
      wofi
