@@ -292,7 +292,8 @@
    # Bootstrap Doom Emacs on fresh installs without making Doom itself a Nix
    # derivation. Nix installs Emacs and Doom's external dependencies, then this
    # activation step clones Doom and runs the first install only when missing.
-   # Normal rebuilds skip Doom, so Doom is not rebuilt on each switch.
+   # Normal rebuilds skip Doom install, but refresh Doom's captured env so
+   # GUI Emacs can see newly added Nix tooling such as Inkscape.
    home.activation.bootstrapDoomEmacs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
      set -eu
 
@@ -307,7 +308,11 @@
        pkgs.gnumake
        pkgs.cmake
        pkgs.pkg-config
+       pkgs.texlive.combined.scheme-full
+       pkgs.poppler-utils
+       pkgs.inkscape
      ]}:$PATH"
+     export DOOMDIR="${config.home.homeDirectory}/.config/doom"
 
      doom_emacs_dir="${config.home.homeDirectory}/.config/emacs"
      doom_bin="$doom_emacs_dir/bin/doom"
@@ -339,6 +344,9 @@
      else
        echo "Doom bootstrap: Doom already installed; skipping doom install"
      fi
+
+     echo "Doom bootstrap: refreshing Doom environment"
+     "$doom_bin" env
    '';
 
    #LibreWolf Config
