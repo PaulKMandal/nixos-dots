@@ -56,8 +56,10 @@
       # needed for arbitrary templates/classes.
       texlive.combined.scheme-full
 
-      # PDF tooling for Doom's :tools pdf module.
+      # PDF/SVG tooling for Doom's :tools pdf module and LaTeX SVG figures.
+      # The LaTeX `svg` package shells out to `inkscape` during builds.
       poppler-utils
+      inkscape
    ];
 
    dconf = {
