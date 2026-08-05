@@ -250,7 +250,9 @@ in
 
 	 };
 
-         bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
+         # Waybar is owned by its Home Manager systemd service below. Do not
+         # let Sway spawn a second unmanaged process.
+         bars = [ ];
 	 startup = [
 	   { command = "${pkgs.swaybg}/bin/swaybg -i ${config.home.homeDirectory}/Pictures/Wallpapers/xPiPUEr.jpg -m fill"; always = true; }
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
@@ -291,6 +293,18 @@ in
       '';
 
    };
+
+   # Keep the existing ~/.config/waybar files unmanaged, but let Home Manager
+   # provide a session-scoped service that restarts Waybar after a crash.
+   programs.waybar = {
+     enable = true;
+     systemd = {
+       enable = true;
+       target = "sway-session.target";
+     };
+   };
+
+   systemd.user.services.waybar.Service.RestartSec = 2;
 
    #Default Applications
    xdg.mimeApps = {
