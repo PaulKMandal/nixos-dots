@@ -1,12 +1,14 @@
 { config, pkgs, lib, ... }:
 
 let
-  codexBootstrap = pkgs.writeShellApplication {
-    name = "codex-bootstrap";
+  # Keep the command itself declarative while allowing OpenAI's standalone
+  # installer to manage the mutable CLI release under ~/.codex. The first
+  # invocation installs Codex only when ~/.local/bin/codex is absent.
+  codexLauncher = pkgs.writeShellApplication {
+    name = "codex";
     runtimeInputs = with pkgs; [
       coreutils
       curl
-      findutils
       gawk
       gnugrep
       gnused
@@ -15,38 +17,40 @@ let
       util-linux
     ];
     text = ''
-      set -euo pipefail
-
       codex_bin="$HOME/.local/bin/codex"
-      if [ -x "$codex_bin" ]; then
-        echo "Codex bootstrap: $codex_bin already exists; nothing to do."
-        exit 0
-      fi
-
-      echo "Codex bootstrap: Codex is missing; installing the standalone CLI."
-      export PATH="$HOME/.local/bin:$PATH"
-      export CODEX_INSTALL_DIR="$HOME/.local/bin"
-      export CODEX_NON_INTERACTIVE=1
-
-      curl \
-        --fail \
-        --silent \
-        --show-error \
-        --location \
-        --connect-timeout 10 \
-        --max-time 120 \
-        --retry 3 \
-        --retry-delay 2 \
-        --retry-all-errors \
-        https://chatgpt.com/codex/install.sh \
-        | sh
 
       if [ ! -x "$codex_bin" ]; then
-        echo "Codex bootstrap: installer completed but $codex_bin is unavailable." >&2
+        echo "Codex is not installed; installing the standalone CLI." >&2
+        mkdir -p "$HOME/.local/bin"
+
+        installer="$(${pkgs.coreutils}/bin/mktemp)"
+        trap '${pkgs.coreutils}/bin/rm -f "$installer"' EXIT
+
+        ${pkgs.curl}/bin/curl \
+          --fail \
+          --silent \
+          --show-error \
+          --location \
+          --connect-timeout 10 \
+          --max-time 120 \
+          --retry 3 \
+          --retry-delay 2 \
+          --retry-all-errors \
+          --output "$installer" \
+          https://chatgpt.com/codex/install.sh
+
+        # Prevent the installer from trying to modify Home Manager's generated
+        # shell startup files. The bin directory is already declared below.
+        export PATH="$HOME/.local/bin:$PATH"
+        CODEX_NON_INTERACTIVE=1 ${pkgs.bash}/bin/sh "$installer"
+      fi
+
+      if [ ! -x "$codex_bin" ]; then
+        echo "Codex installation did not create $codex_bin." >&2
         exit 1
       fi
 
-      "$codex_bin" --version
+      exec "$codex_bin" "$@"
     '';
   };
 in
@@ -59,6 +63,7 @@ in
 
 
    home.packages = with pkgs; [
+      codexLauncher
       kitty
       rofi
       wofi
@@ -304,7 +309,13 @@ in
      };
    };
 
-   systemd.user.services.waybar.Service.RestartSec = 2;
+   systemd.user.services.waybar.Service = {
+     # A Sway-spawned Waybar from the previous configuration can survive the
+     # first Home Manager switch. Remove any unmanaged instance before the
+     # supervised process starts, so exactly one bar owns the layer surface.
+     ExecStartPre = "-${pkgs.procps}/bin/pkill -u %u -x waybar";
+     RestartSec = 2;
+   };
 
    #Default Applications
    xdg.mimeApps = {
@@ -599,23 +610,6 @@ in
   '';
 
   #Services
-
-  # Keep the OpenAI Codex standalone CLI available without making network
-  # access part of a Nix/Home Manager activation. A failed download is retried
-  # every five minutes, while an existing executable makes the service a no-op.
-  systemd.user.services.codex-bootstrap = {
-    Unit.Description = "Install the Codex CLI when it is missing";
-
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${codexBootstrap}/bin/codex-bootstrap";
-      Restart = "on-failure";
-      RestartSec = 300;
-    };
-
-    Unit.StartLimitIntervalSec = 0;
-    Install.WantedBy = [ "default.target" ];
-  };
 
   systemd.user.services.protonmail-bridge = {
     Unit = {
