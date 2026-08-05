@@ -153,6 +153,7 @@ in
      pavucontrol
      mpv
 
+     tmux
      # GrapheneOS / Android flashing and troubleshooting.
      # android-tools provides adb and fastboot for the CLI installer.
      android-tools
@@ -179,6 +180,8 @@ in
      xfce.thunar
      veracrypt
      libreoffice
+     hunspell
+     hunspellDicts.en_US
      pciutils
      ripgrep
      #waterfox #Not working
