@@ -1,5 +1,55 @@
-{ config, pkgs, lib, ...}:
+{ config, pkgs, lib, ... }:
 
+let
+  codexBootstrap = pkgs.writeShellApplication {
+    name = "codex-bootstrap";
+    runtimeInputs = with pkgs; [
+      coreutils
+      curl
+      findutils
+      gawk
+      gnugrep
+      gnused
+      gnutar
+      gzip
+      util-linux
+    ];
+    text = ''
+      set -euo pipefail
+
+      codex_bin="$HOME/.local/bin/codex"
+      if [ -x "$codex_bin" ]; then
+        echo "Codex bootstrap: $codex_bin already exists; nothing to do."
+        exit 0
+      fi
+
+      echo "Codex bootstrap: Codex is missing; installing the standalone CLI."
+      export PATH="$HOME/.local/bin:$PATH"
+      export CODEX_INSTALL_DIR="$HOME/.local/bin"
+      export CODEX_NON_INTERACTIVE=1
+
+      curl \
+        --fail \
+        --silent \
+        --show-error \
+        --location \
+        --connect-timeout 10 \
+        --max-time 120 \
+        --retry 3 \
+        --retry-delay 2 \
+        --retry-all-errors \
+        https://chatgpt.com/codex/install.sh \
+        | sh
+
+      if [ ! -x "$codex_bin" ]; then
+        echo "Codex bootstrap: installer completed but $codex_bin is unavailable." >&2
+        exit 1
+      fi
+
+      "$codex_bin" --version
+    '';
+  };
+in
 {
    imports = [
      ./modules/zed/home.nix
@@ -237,7 +287,7 @@
          # Ensure Sway itself, plus launchers started by Sway, can see
          # executables stored in ~/.bin. home.sessionPath covers shells; this
          # keeps the Wayland session environment in sync too.
-         export PATH="${config.home.homeDirectory}/.bin:$PATH"
+         export PATH="${config.home.homeDirectory}/.local/bin:${config.home.homeDirectory}/.bin:$PATH"
       '';
 
    };
@@ -257,6 +307,7 @@
    };
 
    home.sessionPath = [
+     "$HOME/.local/bin"
      "$HOME/.bin"
      "${config.home.homeDirectory}/.config/emacs/bin"
    ];
@@ -297,7 +348,7 @@
    home.activation.bootstrapDoomEmacs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
      set -eu
 
-     export PATH="${lib.makeBinPath [
+     export PATH="${config.home.homeDirectory}/.local/bin:${lib.makeBinPath [
        pkgs.coreutils
        pkgs.findutils
        pkgs.git
@@ -534,6 +585,23 @@
   '';
 
   #Services
+
+  # Keep the OpenAI Codex standalone CLI available without making network
+  # access part of a Nix/Home Manager activation. A failed download is retried
+  # every five minutes, while an existing executable makes the service a no-op.
+  systemd.user.services.codex-bootstrap = {
+    Unit.Description = "Install the Codex CLI when it is missing";
+
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${codexBootstrap}/bin/codex-bootstrap";
+      Restart = "on-failure";
+      RestartSec = 300;
+    };
+
+    Unit.StartLimitIntervalSec = 0;
+    Install.WantedBy = [ "default.target" ];
+  };
 
   systemd.user.services.protonmail-bridge = {
     Unit = {
