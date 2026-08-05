@@ -144,7 +144,6 @@ in
      rofi
      #firefox
      kitty
-     waybar
      wofi
      mako
      grim slurp

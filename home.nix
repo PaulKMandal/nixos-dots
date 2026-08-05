@@ -67,7 +67,6 @@ in
       kitty
       rofi
       wofi
-      waybar
       mako
       grim
       slurp
@@ -257,7 +256,7 @@ in
 
          # Waybar is owned by its Home Manager systemd service below. Do not
          # let Sway spawn a second unmanaged process.
-         bars = [ ];
+         bars = lib.mkForce [ ];
 	 startup = [
 	   { command = "${pkgs.swaybg}/bin/swaybg -i ${config.home.homeDirectory}/Pictures/Wallpapers/xPiPUEr.jpg -m fill"; always = true; }
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
@@ -309,13 +308,10 @@ in
      };
    };
 
-   systemd.user.services.waybar.Service = {
-     # A Sway-spawned Waybar from the previous configuration can survive the
-     # first Home Manager switch. Remove any unmanaged instance before the
-     # supervised process starts, so exactly one bar owns the layer surface.
-     ExecStartPre = "-${pkgs.procps}/bin/pkill -u %u -x waybar";
-     RestartSec = 2;
-   };
+   # Home Manager's generated waybar.service is the sole process owner.
+   # Sway's bar definitions are forced empty above, and no startup command
+   # launches a second unmanaged instance.
+   systemd.user.services.waybar.Service.RestartSec = 2;
 
    #Default Applications
    xdg.mimeApps = {
