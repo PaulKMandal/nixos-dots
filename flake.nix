@@ -8,7 +8,7 @@
       nur.url = "github:nix-community/NUR";
       sops-nix.url = "github:Mic92/sops-nix";
       sops-nix.inputs.nixpkgs.follows = "nixpkgs";
-      nixpkgs-signal.url = "github:NixOS/nixpkgs/nixos-25.11";
+      nixpkgs-signal.url = "github:NixOS/nixpkgs/nixos-unstable";
    };
 
    outputs = { self, nixpkgs, home-manager, nur, sops-nix, ...}@inputs:
