@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 let
   wrapChromiumBrowser = name: package: binary:
@@ -187,7 +187,7 @@ in
      librewolf
      xdg-utils
      zed-editor
-     signal-desktop
+     inputs.nixpkgs-signal.legacyPackages.${pkgs.system}.signal-desktop
      gnome-disk-utility
      gparted
      cryptsetup

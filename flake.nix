@@ -8,15 +8,17 @@
       nur.url = "github:nix-community/NUR";
       sops-nix.url = "github:Mic92/sops-nix";
       sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+      nixpkgs-signal.url = "github:NixOS/nixpkgs/nixos-25.11";
    };
 
-   outputs = { self, nixpkgs, home-manager, nur, sops-nix, ...}:
+   outputs = { self, nixpkgs, home-manager, nur, sops-nix, ...}@inputs:
    let
       system = "x86_64-linux";
       hostname = "nixos";
       in {
          nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
 	    inherit system;
+            specialArgs = { inherit inputs; };
 	    modules = [
 
                ({ ... }: {
