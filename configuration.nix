@@ -2,8 +2,25 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
+let
+  wrapChromiumBrowser = name: package: binary:
+    pkgs.symlinkJoin {
+      inherit name;
+      paths = [ package ];
+      buildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        wrapProgram $out/bin/${binary} \
+          --add-flags "--proxy-server=direct://" \
+          --add-flags "--proxy-bypass-list=*" \
+          --add-flags "--disable-quic"
+      '';
+    };
+
+  chromiumDirect = wrapChromiumBrowser "chromium-direct" pkgs.chromium "chromium";
+  braveDirect = wrapChromiumBrowser "brave-direct" pkgs.brave "brave";
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -11,6 +28,8 @@
       ./storage.nix
       ./modules/secrets.nix
       ./modules/wireguard.nix
+      ./modules/tor/configuration.nix
+      ./modules/virtualization/configuration.nix
       ./modules/zed/configuration.nix
       #./modules/syncthing/configuration.nix #Currently borked
       ./options.nix
@@ -40,6 +59,27 @@
   # Proton VPN / WireGuard policy routing can fail with strict reverse-path filtering.
   networking.firewall.checkReversePath = "loose";
 
+  # CUPS / printer support. This enables local printing, common open printer
+  # drivers, driverless network discovery, IPP-over-USB, and the GTK printer UI.
+  services.printing = {
+    enable = true;
+    drivers = with pkgs; [
+      cups-filters
+      gutenprint
+      hplip
+      brlaser
+    ];
+  };
+
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
+  services.ipp-usb.enable = true;
+  programs.system-config-printer.enable = true;
+
   # Set your time zone.
   time.timeZone = "America/Chicago";
 
@@ -68,7 +108,7 @@
   users.users.nix = {
     isNormalUser = true;
     description = "Nix";
-    extraGroups = [ "networkmanager" "wheel" "audio" "video" "input"];
+    extraGroups = [ "networkmanager" "wheel" "audio" "video" "input" "adbusers" ];
     packages = with pkgs; [];
   };
 
@@ -82,7 +122,9 @@
      wlr.enable = true;
      extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
-
+  
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
   services.pipewire = {
      enable = true;
      pulse.enable = true;
@@ -100,15 +142,29 @@
      wget
      sway
      rofi
-     firefox
+     #firefox
      kitty
-     waybar
      wofi
      mako
      grim slurp
      wl-clipboard
      polkit_gnome
      pavucontrol
+     mpv
+
+     tmux
+     # GrapheneOS / Android flashing and troubleshooting.
+     # android-tools provides adb and fastboot for the CLI installer.
+     android-tools
+     # The WebUSB installer needs a Chromium-based browser; Firefox/LibreWolf do not work for it.
+     chromiumDirect
+     braveDirect
+     curl
+     libarchive # bsdtar, used by the GrapheneOS CLI install guide on Linux
+     openssh    # ssh-keygen -Y verify for factory image signatures
+     unzip
+     usbutils   # lsusb for USB/fastboot troubleshooting
+
      networkmanagerapplet
      protonvpn-gui
      wireguard-tools
@@ -117,16 +173,21 @@
      protonmail-bridge-gui
      thunderbird
      keepassxc
+     libsecret # secret-tool; useful for Secret Service/keyring debugging
+     glib      # gsettings; useful for Chromium/GNOME proxy debugging
+     seahorse  # GUI keyring manager
      xfce.thunar
      veracrypt
      libreoffice
+     hunspell
+     hunspellDicts.en_US
      pciutils
      ripgrep
      #waterfox #Not working
      librewolf
      xdg-utils
      zed-editor
-     signal-desktop
+     inputs.nixpkgs-signal.legacyPackages.${pkgs.system}.signal-desktop
      gnome-disk-utility
      gparted
      cryptsetup
@@ -144,6 +205,7 @@
 
      #Needed for yubikey use (ykchalresp) with 3rd party apps.
      yubikey-personalization
+     ykfde-open
      yubioath-flutter      # Yubico Authenticator GUI
      yubikey-manager       # ykman CLI
      yubico-piv-tool       # PIV/smartcard tooling
@@ -151,7 +213,16 @@
      gnupg
      pcsc-tools
 
+     kdePackages.kdenlive
+
   ];
+
+  # Enables Android udev integration for adb/fastboot non-root access.
+  # The nix user is in adbusers above.
+  programs.adb.enable = true;
+
+  # Thunderbolt / USB4 dock authorization.
+  services.hardware.bolt.enable = true;
 
   #Needed for non-root use of yubikey tools (e.g. ykchalresp)
   services.udev.packages = with pkgs; [
@@ -229,8 +300,11 @@ fonts.packages = with pkgs; [
   # Closing the lid on battery still uses the default logind behavior.
   services.logind.lidSwitchExternalPower = "ignore";
 
-  #Enable keyring
+  # Secret Service/keyring support for Chromium-family browsers.
+  # PAM should unlock the login keyring at login so Chromium/Brave do not hang
+  # or prompt later when they try to use org.freedesktop.secrets.
   services.gnome.gnome-keyring.enable = true;
+  programs.seahorse.enable = true;
 
   security.pam.services.login.enableGnomeKeyring = true;
   #SysRq for debugging/dumping tasks

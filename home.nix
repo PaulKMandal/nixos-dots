@@ -1,5 +1,59 @@
-{ config, pkgs, lib, ...}:
+{ config, pkgs, lib, ... }:
 
+let
+  # Keep the command itself declarative while allowing OpenAI's standalone
+  # installer to manage the mutable CLI release under ~/.codex. The first
+  # invocation installs Codex only when ~/.local/bin/codex is absent.
+  codexLauncher = pkgs.writeShellApplication {
+    name = "codex";
+    runtimeInputs = with pkgs; [
+      coreutils
+      curl
+      gawk
+      gnugrep
+      gnused
+      gnutar
+      gzip
+      util-linux
+    ];
+    text = ''
+      codex_bin="$HOME/.local/bin/codex"
+
+      if [ ! -x "$codex_bin" ]; then
+        echo "Codex is not installed; installing the standalone CLI." >&2
+        mkdir -p "$HOME/.local/bin"
+
+        installer="$(${pkgs.coreutils}/bin/mktemp)"
+        trap '${pkgs.coreutils}/bin/rm -f "$installer"' EXIT
+
+        ${pkgs.curl}/bin/curl \
+          --fail \
+          --silent \
+          --show-error \
+          --location \
+          --connect-timeout 10 \
+          --max-time 120 \
+          --retry 3 \
+          --retry-delay 2 \
+          --retry-all-errors \
+          --output "$installer" \
+          https://chatgpt.com/codex/install.sh
+
+        # Prevent the installer from trying to modify Home Manager's generated
+        # shell startup files. The bin directory is already declared below.
+        export PATH="$HOME/.local/bin:$PATH"
+        CODEX_NON_INTERACTIVE=1 ${pkgs.bash}/bin/sh "$installer"
+      fi
+
+      if [ ! -x "$codex_bin" ]; then
+        echo "Codex installation did not create $codex_bin." >&2
+        exit 1
+      fi
+
+      exec "$codex_bin" "$@"
+    '';
+  };
+in
 {
    imports = [
      ./modules/zed/home.nix
@@ -7,11 +61,12 @@
 
    home.stateVersion = "25.11";
 
+
    home.packages = with pkgs; [
+      codexLauncher
       kitty
       rofi
       wofi
-      waybar
       mako
       grim
       slurp
@@ -36,6 +91,7 @@
       # Doom Emacs and common external dependencies Doom expects.
       emacs-pgtk
       git
+      git-lfs
       ripgrep
       fd
       gcc
@@ -48,7 +104,24 @@
       nodejs
       shellcheck
       shfmt
+
+      # Full TeX Live distribution for Doom's :lang latex module.
+      # Includes latexmk, latexindent, biber, and the broad package set
+      # needed for arbitrary templates/classes.
+      texlive.combined.scheme-full
+
+      # PDF/SVG tooling for Doom's :tools pdf module and LaTeX SVG figures.
+      # The LaTeX `svg` package shells out to `inkscape` during builds.
+      poppler-utils
+      inkscape
    ];
+
+   dconf = {
+     enable = true;
+     settings."org/gnome/system/proxy" = {
+       mode = "none";
+     };
+   };
 
    home.file.".gnupg/scdaemon.conf".text = ''
       disable-ccid
@@ -72,8 +145,28 @@
      videos = "${config.home.homeDirectory}/Videos";
    };
 
+   xdg.desktopEntries = {
+     "vault-mount" = {
+       name = "Vault Mount";
+       exec = "${pkgs.kitty}/bin/kitty -e ${config.home.homeDirectory}/.bin/vault-mount";
+       terminal = false;
+       categories = [ "Utility" ];
+     };
+
+     "vault-unmount" = {
+       name = "Vault Unmount";
+       exec = "${pkgs.kitty}/bin/kitty -e ${config.home.homeDirectory}/.bin/vault-unmount";
+       terminal = false;
+       categories = [ "Utility" ];
+     };
+   };
+
    #Sway
-   wayland.windowManager.sway = {
+   wayland.windowManager.sway =
+     let
+       appLauncher = "${pkgs.wofi}/bin/wofi --show drun";
+       commandLauncher = "${pkgs.wofi}/bin/wofi --show run";
+     in {
       enable = true;
       
       systemd.enable = true;
@@ -81,18 +174,20 @@
       config = rec {
          modifier = "Mod4"; #modifier
 	 terminal = "${pkgs.kitty}/bin/kitty";
-	 menu = "${pkgs.wofi}/bin/wofi --show drun";
+	 menu = appLauncher;
 
 	 #keybinds
 	 keybindings = {
 	   # --- basics ---
 	  "${modifier}+Return"   = "exec ${terminal}";
 	  "${modifier}+d"        = "exec ${menu}";
+	  "${modifier}+Shift+d"  = "exec ${commandLauncher}";
 	  "${modifier}+q"        = "kill";   # your preference
 	  "${modifier}+r" 	 = "exec ${pkgs.xfce.thunar}/bin/thunar";
 	  "${modifier}+Shift+c"  = "reload";
 	  "${modifier}+Shift+e"  = "exec swaynag -t warning -m 'Exit sway?' -b 'Yes' 'swaymsg exit'";
 	  "Print"       = "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
+	  "Shift+F12"   = "exec ${pkgs.bash}/bin/bash -lc 'set -euo pipefail; dir=\"$HOME/Pictures/Screenshots\"; mkdir -p \"$dir\"; file=\"$dir/$(date +screenshot-%Y%m%d-%H%M%S.png)\"; area=\"$(${pkgs.slurp}/bin/slurp)\" || exit 0; ${pkgs.grim}/bin/grim -g \"$area\" - | tee \"$file\" | ${pkgs.wl-clipboard}/bin/wl-copy --type image/png'";
 
 	  # --- focus movement (vim keys + arrows) ---
 	  "${modifier}+h"        = "focus left";
@@ -159,7 +254,9 @@
 
 	 };
 
-         bars = [ { command = "${pkgs.waybar}/bin/waybar"; } ];
+         # Waybar is owned by its Home Manager systemd service below. Do not
+         # let Sway spawn a second unmanaged process.
+         bars = lib.mkForce [ ];
 	 startup = [
 	   { command = "${pkgs.swaybg}/bin/swaybg -i ${config.home.homeDirectory}/Pictures/Wallpapers/xPiPUEr.jpg -m fill"; always = true; }
 	   { command = "${pkgs.mako}/bin/mako"; always = true;}
@@ -192,9 +289,29 @@
 
       extraSessionCommands = ''
          export WLR_NO_HARDWARE_CURSORS=1
+
+         # Ensure Sway itself, plus launchers started by Sway, can see
+         # executables stored in ~/.bin. home.sessionPath covers shells; this
+         # keeps the Wayland session environment in sync too.
+         export PATH="${config.home.homeDirectory}/.local/bin:${config.home.homeDirectory}/.bin:$PATH"
       '';
 
    };
+
+   # Keep the existing ~/.config/waybar files unmanaged, but let Home Manager
+   # provide a session-scoped service that restarts Waybar after a crash.
+   programs.waybar = {
+     enable = true;
+     systemd = {
+       enable = true;
+       target = "sway-session.target";
+     };
+   };
+
+   # Home Manager's generated waybar.service is the sole process owner.
+   # Sway's bar definitions are forced empty above, and no startup command
+   # launches a second unmanaged instance.
+   systemd.user.services.waybar.Service.RestartSec = 2;
 
    #Default Applications
    xdg.mimeApps = {
@@ -211,11 +328,13 @@
    };
 
    home.sessionPath = [
+     "$HOME/.local/bin"
+     "$HOME/.bin"
      "${config.home.homeDirectory}/.config/emacs/bin"
    ];
 
    home.sessionVariables = {
-     BROWSER = "librefox";
+     BROWSER = "librewolf";
      EDITOR = "nvim";
      VISUAL = "nvim";
      SOPS_EDITOR = "nvim";
@@ -245,11 +364,12 @@
    # Bootstrap Doom Emacs on fresh installs without making Doom itself a Nix
    # derivation. Nix installs Emacs and Doom's external dependencies, then this
    # activation step clones Doom and runs the first install only when missing.
-   # Normal rebuilds skip Doom, so Doom is not rebuilt on each switch.
+   # Normal rebuilds skip Doom install, but refresh Doom's captured env so
+   # GUI Emacs can see newly added Nix tooling such as Inkscape.
    home.activation.bootstrapDoomEmacs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
      set -eu
 
-     export PATH="${lib.makeBinPath [
+     export PATH="${config.home.homeDirectory}/.local/bin:${lib.makeBinPath [
        pkgs.coreutils
        pkgs.findutils
        pkgs.git
@@ -260,7 +380,11 @@
        pkgs.gnumake
        pkgs.cmake
        pkgs.pkg-config
+       pkgs.texlive.combined.scheme-full
+       pkgs.poppler-utils
+       pkgs.inkscape
      ]}:$PATH"
+     export DOOMDIR="${config.home.homeDirectory}/.config/doom"
 
      doom_emacs_dir="${config.home.homeDirectory}/.config/emacs"
      doom_bin="$doom_emacs_dir/bin/doom"
@@ -292,6 +416,9 @@
      else
        echo "Doom bootstrap: Doom already installed; skipping doom install"
      fi
+
+     echo "Doom bootstrap: refreshing Doom environment"
+     "$doom_bin" env
    '';
 
    #LibreWolf Config
@@ -479,6 +606,7 @@
   '';
 
   #Services
+
   systemd.user.services.protonmail-bridge = {
     Unit = {
       Description = "Proton Mail Bridge";

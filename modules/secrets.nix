@@ -15,6 +15,11 @@
   sops = {
     age.keyFile = "/home/nix/.config/sops/age/keys.txt";
     defaultSopsFormat = "yaml";
+
+    # /home is a separate filesystem. Install regular secrets through the
+    # generated systemd unit so sops-nix can add RequiresMountsFor= for the
+    # age identity and wait until /home is mounted during boot.
+    useSystemdActivation = true;
   };
 
   environment.systemPackages = with pkgs; [
