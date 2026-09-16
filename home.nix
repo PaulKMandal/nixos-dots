@@ -53,10 +53,42 @@ let
       exec "$codex_bin" "$@"
     '';
   };
+
+  # JDownloader keeps its application files mutable so its signed in-app
+  # updater can replace them. Seed a writable per-user installation from a
+  # hash-pinned bootstrap JAR, then always run the mutable copy.
+  jdownloader2BootstrapJar = pkgs.fetchurl {
+    url = "https://installer.jdownloader.org/flatpak/2025-11-04/JDownloader.jar";
+    hash = "sha256-OIodAo5ly8Y5M6d43bySZ8FOfnhYOJzjGhC+cwit60A=";
+  };
+
+  jdownloader2Launcher = pkgs.writeShellApplication {
+    name = "jdownloader2";
+    runtimeInputs = with pkgs; [
+      coreutils
+      ffmpeg
+      jdk21
+    ];
+    text = ''
+      data_home="''${XDG_DATA_HOME:-$HOME/.local/share}"
+      jd_dir="$data_home/jdownloader"
+      jd_jar="$jd_dir/JDownloader.jar"
+
+      if ! ${pkgs.jdk21}/bin/jar -tf "$jd_jar" >/dev/null 2>&1; then
+        echo "JDownloader 2 bootstrap: seeding $jd_jar" >&2
+        rm -rf "$jd_dir/Core.jar" "$jd_dir/update" "$jd_dir/tmp"
+        mkdir -p "$jd_dir"
+        install -m 0644 ${jdownloader2BootstrapJar} "$jd_jar"
+      fi
+
+      exec ${pkgs.jdk21}/bin/java -jar "$jd_jar" "$@"
+    '';
+  };
 in
 {
    imports = [
      ./modules/zed/home.nix
+     ./modules/cac/home.nix
    ];
 
    home.stateVersion = "25.11";
@@ -64,6 +96,7 @@ in
 
    home.packages = with pkgs; [
       codexLauncher
+      jdownloader2Launcher
       kitty
       rofi
       wofi
@@ -105,6 +138,21 @@ in
       shellcheck
       shfmt
 
+      # Host-level tools for the Doom language modules kept enabled in
+      # ~/.config/doom/init.el. Project flakes/virtual environments remain
+      # authoritative; these provide editor integrations outside a project
+      # shell and satisfy Doom's useful dependency checks.
+      pandoc                     # :lang markdown preview/compiler
+      nixfmt                     # :lang nix formatting
+      isort                      # :lang python import sorting
+      python3Packages.pytest      # :lang python test runner
+      pipenv                     # optional Doom Python environment integration
+      rustc                      # :lang rust compiler
+      cargo                      # :lang rust build/test tooling
+      html-tidy                  # :lang web HTML formatting (tidy)
+      stylelint                  # :lang web CSS linting
+      js-beautify                # :lang web JS/CSS/HTML formatting
+
       # Full TeX Live distribution for Doom's :lang latex module.
       # Includes latexmk, latexindent, biber, and the broad package set
       # needed for arbitrary templates/classes.
@@ -122,11 +170,6 @@ in
        mode = "none";
      };
    };
-
-   home.file.".gnupg/scdaemon.conf".text = ''
-      disable-ccid
-      pcsc-shared
-      '';
 
    # XDG user folders. Thunar uses this file to recognize special home
    # folders and show folder-specific icons for Downloads, Documents,
@@ -146,6 +189,16 @@ in
    };
 
    xdg.desktopEntries = {
+     "jdownloader2" = {
+       name = "JDownloader 2";
+       genericName = "Download Manager";
+       comment = "Download manager for one-click hosting and direct downloads";
+       exec = "${jdownloader2Launcher}/bin/jdownloader2 %U";
+       icon = "folder-download";
+       terminal = false;
+       categories = [ "Network" "FileTransfer" ];
+     };
+
      "vault-mount" = {
        name = "Vault Mount";
        exec = "${pkgs.kitty}/bin/kitty -e ${config.home.homeDirectory}/.bin/vault-mount";

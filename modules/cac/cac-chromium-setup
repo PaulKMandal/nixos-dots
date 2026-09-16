@@ -1,0 +1,25 @@
+set -euo pipefail
+
+P11_PROXY="${CAC_P11_KIT_PROXY:?CAC_P11_KIT_PROXY was not set by the Nix wrapper}"
+NSSDB="${HOME}/.pki/nssdb"
+MODULE_NAME="p11-kit-proxy"
+
+mkdir -p "$NSSDB"
+
+# Chromium normally creates this database on first launch. Create an empty one
+# when the browser has not done so yet.
+if [[ ! -f "$NSSDB/cert9.db" ]]; then
+  certutil -N --empty-password -d "sql:$NSSDB"
+fi
+
+if modutil -dbdir "sql:$NSSDB" -list 2>/dev/null | grep -Fq "$MODULE_NAME"; then
+  modutil -force -dbdir "sql:$NSSDB" -delete "$MODULE_NAME"
+fi
+
+modutil -force \
+  -dbdir "sql:$NSSDB" \
+  -add "$MODULE_NAME" \
+  -libfile "$P11_PROXY"
+
+printf 'Registered %s in %s. Fully quit and reopen Chromium/Brave.\n' \
+  "$MODULE_NAME" "$NSSDB"

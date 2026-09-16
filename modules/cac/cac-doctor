@@ -1,0 +1,133 @@
+set -euo pipefail
+
+VM="${CAC_VM:-win11}"
+VENDOR="${CAC_VENDOR:-04e6}"
+PRODUCT="${CAC_PRODUCT:-5116}"
+VIRSH_URI="${CAC_VIRSH_URI:-qemu:///system}"
+P11_PROXY="${CAC_P11_KIT_PROXY:?CAC_P11_KIT_PROXY was not set by the Nix wrapper}"
+OPENSC_MODULE="${CAC_OPENSC_MODULE:?CAC_OPENSC_MODULE was not set by the Nix wrapper}"
+P11_CONFIG="${CAC_P11_CONFIG:-/etc/pkcs11/modules/opensc-pkcs11}"
+failures=0
+warnings=0
+
+pass() {
+  printf '[PASS] %s\n' "$*"
+}
+
+warn() {
+  printf '[WARN] %s\n' "$*" >&2
+  warnings=$((warnings + 1))
+}
+
+fail() {
+  printf '[FAIL] %s\n' "$*" >&2
+  failures=$((failures + 1))
+}
+
+virsh_system() {
+  virsh --connect "$VIRSH_URI" "$@"
+}
+
+vm_has_reader() {
+  local xml result
+  xml="$(virsh_system dumpxml "$VM" 2>/dev/null || true)"
+  [[ -n "$xml" ]] || return 1
+  result="$(
+    printf '%s' "$xml" |
+      xmllint --xpath \
+        "boolean(/domain/devices/hostdev[@type='usb']/source[vendor[@id='0x${VENDOR}'] and product[@id='0x${PRODUCT}']])" \
+        - 2>/dev/null || true
+  )"
+  [[ "$result" == "true" ]]
+}
+
+printf 'CAC host diagnostics\n'
+printf '  reader: %s:%s\n' "$VENDOR" "$PRODUCT"
+printf '  VM:     %s\n\n' "$VM"
+
+if lsusb -d "${VENDOR}:${PRODUCT}" >/dev/null 2>&1; then
+  pass "USB reader ${VENDOR}:${PRODUCT} is visible"
+else
+  fail "USB reader ${VENDOR}:${PRODUCT} is not visible; reconnect it or correct CAC_VENDOR/CAC_PRODUCT"
+fi
+
+if vm_has_reader; then
+  fail "the reader is attached to VM '$VM'; the host browser cannot use it simultaneously"
+  printf '       Fix: cac-toggle host\n' >&2
+else
+  pass "the live VM XML does not claim the reader"
+fi
+
+if systemctl is-active --quiet pcscd.socket; then
+  pass "pcscd.socket is active"
+elif systemctl is-active --quiet pcscd.service; then
+  pass "pcscd.service is active"
+else
+  fail "the PC/SC service is inactive or runtime-masked"
+  printf '       Fix: cac-toggle host\n' >&2
+fi
+
+reader_output="$(timeout 8 opensc-tool --list-readers 2>&1 || true)"
+if grep -Eq '(^|[[:space:]])[0-9]+[[:space:]]' <<<"$reader_output"; then
+  pass "OpenSC enumerates at least one reader"
+  printf '%s\n' "$reader_output" | sed 's/^/       /'
+else
+  fail "OpenSC did not enumerate a reader"
+  printf '%s\n' "$reader_output" | sed 's/^/       /' >&2
+fi
+
+if [[ -r "$P11_CONFIG" ]] && grep -Fq "$OPENSC_MODULE" "$P11_CONFIG"; then
+  pass "p11-kit has the declarative OpenSC module configuration"
+else
+  fail "$P11_CONFIG is missing or points at the wrong module"
+fi
+
+p11_output="$(timeout 8 p11-kit list-modules 2>&1 || true)"
+if grep -Fq "$OPENSC_MODULE" <<<"$p11_output" || grep -qi 'opensc' <<<"$p11_output"; then
+  pass "p11-kit lists OpenSC"
+else
+  fail "p11-kit does not list OpenSC"
+  printf '%s\n' "$p11_output" | sed 's/^/       /' >&2
+fi
+
+slot_output="$(timeout 8 pkcs11-tool --module "$P11_PROXY" --list-slots 2>&1 || true)"
+if grep -Eq 'Available slots:|Slot [0-9]+' <<<"$slot_output"; then
+  pass "the p11-kit proxy can enumerate PKCS#11 slots"
+  printf '%s\n' "$slot_output" | sed 's/^/       /'
+else
+  fail "the p11-kit proxy could not enumerate PKCS#11 slots"
+  printf '%s\n' "$slot_output" | sed 's/^/       /' >&2
+fi
+
+cert_output="$(timeout 8 pkcs11-tool --module "$P11_PROXY" --list-objects --type cert 2>&1 || true)"
+cert_count="$(grep -ci 'Certificate Object' <<<"$cert_output" || true)"
+if (( cert_count > 0 )); then
+  pass "PKCS#11 exposes $cert_count certificate object(s) from the inserted token"
+else
+  warn "no certificate objects were exposed; verify that the CAC is inserted and recognized as a token"
+fi
+
+browser_bin="$(command -v librewolf 2>/dev/null || true)"
+if [[ -z "$browser_bin" ]]; then
+  warn "LibreWolf is not in PATH, so its generated enterprise policy could not be inspected"
+else
+  resolved_browser="$(readlink -f "$browser_bin")"
+  browser_root="$(dirname "$(dirname "$resolved_browser")")"
+  policy_file="$(find "$browser_root" -path '*/distribution/policies.json' -print -quit 2>/dev/null || true)"
+
+  if [[ -n "$policy_file" ]] && grep -Fq "$P11_PROXY" "$policy_file"; then
+    pass "LibreWolf's generated policies.json loads p11-kit-proxy"
+    printf '       %s\n' "$policy_file"
+  else
+    warn "could not verify p11-kit-proxy in LibreWolf's generated policies.json"
+    printf '       Check about:policies after fully restarting LibreWolf.\n' >&2
+  fi
+fi
+
+printf '\nResult: %d failure(s), %d warning(s).\n' "$failures" "$warnings"
+
+if (( failures > 0 )); then
+  exit 1
+fi
+
+printf 'Host middleware is working. Fully quit and reopen LibreWolf, then check about:policies and Settings -> Privacy & Security -> Security Devices.\n'

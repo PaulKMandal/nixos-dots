@@ -1,0 +1,290 @@
+set -euo pipefail
+
+VM="${CAC_VM:-win11}"
+VENDOR="${CAC_VENDOR:-04e6}"
+PRODUCT="${CAC_PRODUCT:-5116}"
+HOST_USER="${CAC_HOST_USER:-nix}"
+VIRSH_URI="${CAC_VIRSH_URI:-qemu:///system}"
+HOSTDEV_XML=""
+
+cleanup() {
+  if [[ -n "${HOSTDEV_XML:-}" ]]; then
+    rm -f -- "$HOSTDEV_XML"
+  fi
+}
+trap cleanup EXIT
+
+usage() {
+  cat <<USAGE
+Usage: cac-toggle [toggle|host|vm|status]
+
+Environment overrides:
+  CAC_VM          libvirt domain name        (default: win11)
+  CAC_VENDOR      USB vendor ID, no 0x       (default: 04e6)
+  CAC_PRODUCT     USB product ID, no 0x      (default: 5116)
+  CAC_HOST_USER   host desktop account       (default: nix)
+  CAC_VIRSH_URI   libvirt connection URI     (default: qemu:///system)
+USAGE
+}
+
+die() {
+  printf 'cac-toggle: %s\n' "$*" >&2
+  exit 1
+}
+
+as_root() {
+  if (( EUID == 0 )); then
+    return
+  fi
+
+  local self sudo_bin env_bin
+  self="$(readlink -f -- "$0")"
+  env_bin="$(command -v env)"
+
+  # On NixOS the privileged sudo entry point is the security wrapper, not the
+  # unprivileged executable in the Nix store.
+  if [[ -x /run/wrappers/bin/sudo ]]; then
+    sudo_bin=/run/wrappers/bin/sudo
+  else
+    sudo_bin="$(command -v sudo 2>/dev/null || true)"
+    [[ -n "$sudo_bin" ]] || die "sudo is not available"
+  fi
+
+  exec "$sudo_bin" "$env_bin" \
+    CAC_VM="$VM" \
+    CAC_VENDOR="$VENDOR" \
+    CAC_PRODUCT="$PRODUCT" \
+    CAC_HOST_USER="$HOST_USER" \
+    CAC_VIRSH_URI="$VIRSH_URI" \
+    "$self" "$@"
+}
+
+virsh_system() {
+  virsh --connect "$VIRSH_URI" "$@"
+}
+
+vm_exists() {
+  virsh_system dominfo "$VM" >/dev/null 2>&1
+}
+
+vm_running() {
+  local state
+  state="$(virsh_system domstate "$VM" 2>/dev/null || true)"
+  [[ "$state" == "running" || "$state" == "paused" || "$state" == "pmsuspended" ]]
+}
+
+reader_present_on_usb() {
+  lsusb -d "${VENDOR}:${PRODUCT}" >/dev/null 2>&1
+}
+
+xml_has_reader() {
+  local xml_mode="$1"
+  local xml result
+
+  if [[ "$xml_mode" == "inactive" ]]; then
+    xml="$(virsh_system dumpxml --inactive "$VM" 2>/dev/null || true)"
+  else
+    xml="$(virsh_system dumpxml "$VM" 2>/dev/null || true)"
+  fi
+
+  [[ -n "$xml" ]] || return 1
+  result="$(
+    printf '%s' "$xml" |
+      xmllint --xpath \
+        "boolean(/domain/devices/hostdev[@type='usb']/source[vendor[@id='0x${VENDOR}'] and product[@id='0x${PRODUCT}']])" \
+        - 2>/dev/null || true
+  )"
+  [[ "$result" == "true" ]]
+}
+
+reader_attached_live() {
+  vm_running && xml_has_reader live
+}
+
+reader_attached_persistently() {
+  vm_exists && xml_has_reader inactive
+}
+
+prepare_hostdev_xml() {
+  HOSTDEV_XML="$(mktemp)"
+  cat >"$HOSTDEV_XML" <<XML
+<hostdev mode='subsystem' type='usb'>
+  <source>
+    <vendor id='0x${VENDOR}'/>
+    <product id='0x${PRODUCT}'/>
+  </source>
+</hostdev>
+XML
+}
+
+wait_for_live_state() {
+  local expected="$1"
+  local attempt
+
+  for (( attempt = 0; attempt < 20; attempt++ )); do
+    if [[ "$expected" == "attached" ]] && reader_attached_live; then
+      return 0
+    fi
+    if [[ "$expected" == "detached" ]] && ! reader_attached_live; then
+      return 0
+    fi
+    sleep 0.25
+  done
+
+  return 1
+}
+
+stop_host_stack() {
+  systemctl mask --runtime --now pcscd.service pcscd.socket >/dev/null
+  udevadm settle || true
+  sleep 0.5
+}
+
+start_host_stack() {
+  systemctl unmask --runtime pcscd.service pcscd.socket >/dev/null 2>&1 || true
+  systemctl reset-failed pcscd.service pcscd.socket >/dev/null 2>&1 || true
+  systemctl start pcscd.socket
+  systemctl restart pcscd.service
+  udevadm settle || true
+}
+
+remove_persistent_attachment() {
+  if reader_attached_persistently; then
+    printf 'Removing the persistent CAC hostdev from %s; toggles are live-only.\n' "$VM"
+    virsh_system detach-device "$VM" "$HOSTDEV_XML" --config
+  fi
+}
+
+to_vm() {
+  as_root vm
+  vm_exists || die "libvirt domain '$VM' does not exist"
+  vm_running || die "libvirt domain '$VM' is not running"
+  prepare_hostdev_xml
+
+  if reader_attached_live; then
+    stop_host_stack
+    remove_persistent_attachment
+    printf 'CAC -> VM (%s)\n' "$VM"
+    return
+  fi
+
+  reader_present_on_usb || die \
+    "USB reader ${VENDOR}:${PRODUCT} is not connected to the host"
+
+  printf 'Stopping the host PC/SC stack...\n'
+  stop_host_stack
+
+  printf 'Attaching USB reader %s:%s to %s...\n' "$VENDOR" "$PRODUCT" "$VM"
+  if ! virsh_system attach-device "$VM" "$HOSTDEV_XML" --live; then
+    start_host_stack
+    die "libvirt attach failed; host PC/SC access was restored. Do not also redirect this reader through SPICE."
+  fi
+
+  if ! wait_for_live_state attached; then
+    start_host_stack
+    die "libvirt returned success, but the reader did not appear in the live domain XML"
+  fi
+
+  remove_persistent_attachment
+  printf 'CAC -> VM (%s)\n' "$VM"
+}
+
+to_host() {
+  as_root host
+
+  local detach_failed=0
+  prepare_hostdev_xml
+
+  if vm_exists && reader_attached_persistently; then
+    printf 'Removing persistent CAC attachment from %s...\n' "$VM"
+    virsh_system detach-device "$VM" "$HOSTDEV_XML" --config || detach_failed=1
+  fi
+
+  if vm_exists && reader_attached_live; then
+    printf 'Detaching CAC reader from %s...\n' "$VM"
+    virsh_system detach-device "$VM" "$HOSTDEV_XML" --live || detach_failed=1
+
+    if ! wait_for_live_state detached; then
+      detach_failed=1
+    fi
+  fi
+
+  if (( detach_failed != 0 )) && reader_attached_live; then
+    die "the VM still owns the reader; pcscd remains disabled to avoid concurrent access"
+  fi
+
+  printf 'Starting the host PC/SC stack...\n'
+  start_host_stack
+
+  if reader_present_on_usb; then
+    local opensc_tool
+    opensc_tool="$(command -v opensc-tool)"
+    if timeout 5 runuser -u "$HOST_USER" -- "$opensc_tool" --list-readers >/dev/null 2>&1; then
+      printf 'CAC -> HOST (reader visible through OpenSC)\n'
+    else
+      printf 'CAC -> HOST, but OpenSC did not enumerate the reader. Run cac-doctor.\n' >&2
+    fi
+  else
+    printf 'CAC -> HOST, but USB reader %s:%s is not currently connected.\n' \
+      "$VENDOR" "$PRODUCT" >&2
+  fi
+
+  if (( detach_failed != 0 )); then
+    printf 'Warning: the live reader is detached, but a persistent libvirt entry could not be removed.\n' >&2
+  fi
+
+  printf 'After the first rebuild, fully quit and reopen LibreWolf so its new PKCS#11 policy is loaded.\n'
+}
+
+show_status() {
+  if vm_exists && reader_attached_live; then
+    printf 'CAC -> VM (%s)\n' "$VM"
+    if reader_attached_persistently; then
+      printf 'Warning: the reader is also in the persistent VM configuration.\n' >&2
+    fi
+    return
+  fi
+
+  if systemctl is-active --quiet pcscd.socket || systemctl is-active --quiet pcscd.service; then
+    if reader_present_on_usb; then
+      printf 'CAC -> HOST (USB reader present)\n'
+    else
+      printf 'CAC -> HOST (reader unplugged or not visible as %s:%s)\n' "$VENDOR" "$PRODUCT"
+    fi
+    return
+  fi
+
+  printf 'CAC state is inconsistent: the VM does not own it and pcscd is not active.\n' >&2
+  printf 'Run: cac-toggle host\n' >&2
+  return 1
+}
+
+case "${1:-toggle}" in
+  toggle)
+    # Determine ownership with the same system libvirt privileges used for the
+    # actual transition; an unprivileged lookup could otherwise choose the
+    # wrong direction.
+    as_root toggle
+    if vm_exists && reader_attached_live; then
+      to_host
+    else
+      to_vm
+    fi
+    ;;
+  host)
+    to_host
+    ;;
+  vm)
+    to_vm
+    ;;
+  status)
+    show_status
+    ;;
+  -h|--help|help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

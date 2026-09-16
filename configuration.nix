@@ -30,6 +30,7 @@ in
       ./modules/wireguard.nix
       ./modules/tor/configuration.nix
       ./modules/virtualization/configuration.nix
+      ./modules/cac/configuration.nix
       ./modules/zed/configuration.nix
       #./modules/syncthing/configuration.nix #Currently borked
       ./options.nix
@@ -184,7 +185,6 @@ in
      pciutils
      ripgrep
      #waterfox #Not working
-     librewolf
      xdg-utils
      zed-editor
      inputs.nixpkgs-signal.legacyPackages.${pkgs.system}.signal-desktop
@@ -211,7 +211,6 @@ in
      yubico-piv-tool       # PIV/smartcard tooling
 
      gnupg
-     pcsc-tools
 
      kdePackages.kdenlive
 
@@ -229,9 +228,6 @@ in
     yubikey-personalization
     libfido2
   ];
-
-  #needed for PIV/GPG use with yubikey
-  services.pcscd.enable = true;
 
   #needed for fuse mounts (SiriKali)
   programs.fuse.userAllowOther = true;
