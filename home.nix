@@ -81,7 +81,14 @@ let
         install -m 0644 ${jdownloader2BootstrapJar} "$jd_jar"
       fi
 
-      exec ${pkgs.jdk21}/bin/java -jar "$jd_jar" "$@"
+      # JDownloader is a Java AWT/Swing application. Sway is a non-reparenting
+      # compositor, so tell AWT not to use reparenting-WM assumptions. Keep the
+      # X11 toolkit forced as well so JDownloader always runs through XWayland.
+      export _JAVA_AWT_WM_NONREPARENTING=1
+      export AWT_TOOLKIT=XToolkit
+      exec ${pkgs.jdk21}/bin/java \
+        -Dawt.toolkit=sun.awt.X11.XToolkit \
+        -jar "$jd_jar" "$@"
     '';
   };
 in
