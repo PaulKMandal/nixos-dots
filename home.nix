@@ -96,6 +96,7 @@ in
    imports = [
      ./modules/zed/home.nix
      ./modules/cac/home.nix
+     ./modules/power/home.nix
    ];
 
    home.stateVersion = "25.11";

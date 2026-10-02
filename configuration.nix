@@ -25,12 +25,14 @@ in
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./modules/kernel-fixes/amdgpu-aux-bounds.nix
       ./storage.nix
       ./modules/secrets.nix
       ./modules/wireguard.nix
       ./modules/tor/configuration.nix
       ./modules/virtualization/configuration.nix
       ./modules/cac/configuration.nix
+      ./modules/power/configuration.nix
       ./modules/zed/configuration.nix
       #./modules/syncthing/configuration.nix #Currently borked
       ./options.nix
@@ -292,9 +294,8 @@ fonts.packages = with pkgs; [
   nerd-fonts."jetbrains-mono"
 ];
 
-  # Power management. Keep the laptop awake when the lid is closed on AC power.
-  # Closing the lid on battery still uses the default logind behavior.
-  services.logind.lidSwitchExternalPower = "ignore";
+  # Power, charging, and lid policy live in modules/power/configuration.nix.
+  # AC/docked lid-close remains awake.
 
   # Secret Service/keyring support for Chromium-family browsers.
   # PAM should unlock the login keyring at login so Chromium/Brave do not hang

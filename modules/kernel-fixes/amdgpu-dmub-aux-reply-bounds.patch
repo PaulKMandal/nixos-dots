@@ -1,0 +1,43 @@
+Subject: [LOCAL BACKPORT] drm/amd/display: bound DMUB AUX replies on Linux 6.12.90
+
+Receive-length logic adapted from upstream Linux v7.3-rc4:
+https://raw.githubusercontent.com/torvalds/linux/v7.3-rc4/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_dmub.c
+
+This is a local test backport, not an official stable commit or a verified
+hardware fix. Only the receive copy and returned length are changed.
+Context and line numbers were generated from the locally supplied kernel
+source archive after verifying the complete function's code tokens.
+
+--- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
++++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
+@@ -12716,12 +12716,24 @@
+ 		payload->reply[0] = (adev->dm.dmub_notify->aux_reply.command >> 4) & 0xF;
+ 
+ 	/*write req may receive a byte indicating partially written number as well*/
+-	if (p_notify->aux_reply.length)
+-		memcpy(payload->data, p_notify->aux_reply.data,
+-				p_notify->aux_reply.length);
+-
+-	/* success */
+-	ret = p_notify->aux_reply.length;
++	if (p_notify->aux_reply.length && payload->data) {
++		/* Bound the reply to the scratch buffer it was read into. */
++		ret = min_t(uint32_t, p_notify->aux_reply.length,
++			    sizeof(p_notify->aux_reply.data));
++		/*
++		 * During a write-status-update retry the caller zeroes
++		 * payload->length while still expecting the partial-write
++		 * status byte in payload->data (see dce_aux_transfer_with_retries),
++		 * so only clamp to payload->length for regular transfers.
++		 */
++		if (!payload->write_status_update)
++			ret = min_t(int, ret, payload->length);
++
++		memcpy(payload->data, p_notify->aux_reply.data, ret);
++	} else {
++		/* success */
++		ret = p_notify->aux_reply.length;
++	}
+ 	*operation_result = p_notify->result;
+ out:
+ 	reinit_completion(&adev->dm.dmub_aux_transfer_done);
